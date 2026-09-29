@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix Launch Trajectory \u0026 Mission Quantum Optimization",
+  "description": "Launch trajectory simulation, mission planning, and QUBO/QAOA quantum optimization research platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

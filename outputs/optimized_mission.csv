@@ -1,0 +1,2 @@
+bitstring,is_feasible,constraint_violations,violation_details,window_name,window_offset_min,trajectory_name,mode_name,fuel_consumption_kg,delta_v_kms,launch_cost_musd,risk_score,flight_time_sec,objective_value
+010001010,True,0,[],Mid Window (Nominal),0,Multi-Stage Ascent,Nominal,290653.9,10.796,37.45,41.4,705,58.7803

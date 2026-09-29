@@ -1,0 +1,9 @@
+metric,unit,baseline,classical,quantum,best_performer
+Objective Value,Score (lower is better),58.7333,55.8702,58.7803,Classical
+Fuel Consumption,kg,292000.0,273563.6,290653.9,Classical
+Launch Cost,Million USD,37.45,36.33,37.45,Classical
+Risk Score,0 - 100,40.9,38.9,41.4,Classical
+Mission Δv,km/s,10.846,10.696,10.796,Classical
+Flight Time,seconds,680,690,705,Classical
+Constraint Violations,count,0,0,0,Tied / Both 0
+Execution Time,milliseconds,0.0,0.24,55.03,Classical
