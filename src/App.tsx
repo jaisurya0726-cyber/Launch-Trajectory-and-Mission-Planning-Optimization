@@ -18,6 +18,8 @@ import { ComparisonView } from "./components/ComparisonView";
 import { FinalPlanView } from "./components/FinalPlanView";
 import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
 import { SensitivityAnalysisView } from "./components/SensitivityAnalysisView";
+import { QuantumFidelityView } from "./components/QuantumFidelityView";
+import { MissionInputView } from "./components/MissionInputView";
 import { MissionHistoryModal } from "./components/MissionHistoryModal";
 import { MissionLogbookSidebar } from "./components/MissionLogbookSidebar";
 import { runClassicalOptimization, runQAOASimulation } from "./lib/optimization";
@@ -169,6 +171,7 @@ function MainApp() {
               setSelectedMission(m);
             }}
             onProceed={() => setActiveTab(1)}
+            onOpenCustomInput={() => setActiveTab(11)}
           />
         )}
 
@@ -213,6 +216,10 @@ function MainApp() {
               persistCurrentRun(selectedMission);
               setActiveTab(6);
             }}
+            onProceedToFidelity={() => {
+              persistCurrentRun(selectedMission);
+              setActiveTab(10);
+            }}
           />
         )}
 
@@ -251,6 +258,37 @@ function MainApp() {
             mission={selectedMission}
             onUpdateMission={(updated) => setSelectedMission(updated)}
             onProceedToOptimization={() => setActiveTab(3)}
+          />
+        )}
+
+        {/* Tab 11: Quantum Fidelity & Solution Confidence */}
+        {activeTab === 10 && (
+          <QuantumFidelityView
+            mission={selectedMission}
+            onProceedToComparison={() => {
+              persistCurrentRun(selectedMission);
+              setActiveTab(6);
+            }}
+            onProceedToQAOA={() => setActiveTab(5)}
+          />
+        )}
+
+        {/* Tab 12: Mission Input & Custom Optimizer */}
+        {activeTab === 11 && (
+          <MissionInputView
+            initialMission={selectedMission}
+            onApplyMission={(m) => {
+              setSelectedMission(m);
+              persistCurrentRun(m);
+            }}
+            onProceedToComparison={() => {
+              persistCurrentRun(selectedMission);
+              setActiveTab(6);
+            }}
+            onProceedToPlan={() => {
+              persistCurrentRun(selectedMission);
+              setActiveTab(7);
+            }}
           />
         )}
         </main>

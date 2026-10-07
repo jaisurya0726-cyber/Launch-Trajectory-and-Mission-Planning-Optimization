@@ -16,6 +16,7 @@ import {
   METRIC_LABELS,
 } from "./D3SensitivityScatterPlot";
 import { SensitivityHeatmap } from "./SensitivityHeatmap";
+import { FuelMarginRippleSimulator } from "./FuelMarginRippleSimulator";
 import {
   TrendingUp,
   Sliders,
@@ -438,6 +439,12 @@ export const SensitivityAnalysisView: React.FC<SensitivityAnalysisViewProps> = (
           </div>
         )}
       </div>
+
+      {/* REAL-TIME FUEL MARGIN SENSITIVITY RIPPLE SIMULATOR */}
+      <FuelMarginRippleSimulator
+        mission={mission}
+        onUpdateMission={onUpdateMission}
+      />
 
       {/* VIEW 1: D3 SCATTER PLOT MODE */}
       {activeSubView === "scatter" && (

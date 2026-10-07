@@ -6,6 +6,9 @@ import {
   QAOAConvergenceStep,
   QuantumNoiseConfig,
   NoisePreset,
+  MeasuredEigenstate,
+  QuantumFidelityStatistics,
+  QAOAFidelityAnalysis,
 } from "../types";
 
 export const NOISE_PRESETS: Record<Exclude<NoisePreset, "custom">, QuantumNoiseConfig> = {
@@ -655,5 +658,263 @@ export function decodeBitstring(bitstring: string, mission: Mission) {
     risk_score: Number(qRisk.toFixed(1)),
     flight_time_sec: qTime,
     objective_value: Number(obj.toFixed(4)),
+  };
+}
+
+export function runQAOAFidelityAnalysis(
+  mission: Mission,
+  pLayers = 1,
+  shots = 1024,
+  gamma = 0.42,
+  beta = 0.35,
+  noiseConfig?: QuantumNoiseConfig
+): QAOAFidelityAnalysis {
+  const qubo = buildQUBOMatrix(mission);
+  const Q = qubo.qubo_matrix;
+  const offset = qubo.qubo_offset;
+  const nQubits = qubo.num_qubits;
+  const numStates = 1 << nQubits; // 512
+
+  const isNoiseActive = noiseConfig?.enabled ?? false;
+  const twoQError = isNoiseActive ? (noiseConfig?.twoQubitGateError ?? 0.015) : 0;
+  const oneQError = isNoiseActive ? (noiseConfig?.singleQubitGateError ?? 0.0018) : 0;
+  const t2Us = isNoiseActive ? (noiseConfig?.dephasingTimeT2Us ?? 65.0) : 10000;
+  const t1Us = isNoiseActive ? (noiseConfig?.relaxationTimeT1Us ?? 85.0) : 10000;
+  const readoutErr = isNoiseActive ? (noiseConfig?.readoutError ?? 0.025) : 0;
+
+  const numCnot = ((nQubits * (nQubits - 1)) / 2) * pLayers;
+  const num1Q = nQubits + 2 * nQubits * pLayers;
+  const circuitDurationUs = pLayers * (36 * 0.25 + 18 * 0.04);
+
+  const gateFidelity =
+    Math.pow(Math.max(0, 1 - twoQError), numCnot) *
+    Math.pow(Math.max(0, 1 - oneQError), num1Q);
+  const decoherenceFidelity =
+    Math.exp(-circuitDurationUs / Math.max(1, t2Us)) *
+    Math.exp(-circuitDurationUs / (2 * Math.max(1, t1Us)));
+  const readoutFidelity = Math.pow(Math.max(0, 1 - readoutErr), nQubits);
+
+  const totalCircuitFidelity = isNoiseActive
+    ? Math.max(0.04, Math.min(0.999, gateFidelity * decoherenceFidelity * readoutFidelity))
+    : 1.0;
+  const decoherenceLossPct = Number(((1.0 - totalCircuitFidelity) * 100).toFixed(1));
+
+  // Precompute energies for all 512 states
+  const costs: number[] = new Array(numStates);
+  for (let i = 0; i < numStates; i++) {
+    const bs = i.toString(2).padStart(nQubits, "0");
+    costs[i] = evaluateQUBOEnergy(bs, Q, offset);
+  }
+
+  // Exact statevector evolution
+  const invSqrt = 1.0 / Math.sqrt(numStates);
+  const real = new Float64Array(numStates);
+  const imag = new Float64Array(numStates);
+
+  for (let i = 0; i < numStates; i++) {
+    const phase = -gamma * (costs[i] % 50.0);
+    real[i] = invSqrt * Math.cos(phase);
+    imag[i] = invSqrt * Math.sin(phase);
+  }
+
+  const cosB = Math.cos(beta);
+  const sinB = Math.sin(beta);
+
+  for (let q = 0; q < nQubits; q++) {
+    const step = 1 << q;
+    for (let i = 0; i < numStates; i += step * 2) {
+      for (let j = i; j < i + step; j++) {
+        const k = j + step;
+        const r0 = real[j];
+        const im0 = imag[j];
+        const r1 = real[k];
+        const im1 = imag[k];
+
+        real[j] = cosB * r0 + sinB * im1;
+        imag[j] = cosB * im0 - sinB * r1;
+        real[k] = cosB * r1 + sinB * im0;
+        imag[k] = cosB * im1 - sinB * r0;
+      }
+    }
+  }
+
+  // Probability amplitudes
+  const probs = new Float64Array(numStates);
+  let totalP = 0;
+  for (let i = 0; i < numStates; i++) {
+    let p = real[i] * real[i] + imag[i] * imag[i];
+    if (isNoiseActive) {
+      const uniformProb = 1.0 / numStates;
+      p = totalCircuitFidelity * p + (1.0 - totalCircuitFidelity) * uniformProb;
+    }
+    probs[i] = p;
+    totalP += p;
+  }
+  for (let i = 0; i < numStates; i++) probs[i] /= totalP;
+
+  // Measurement shots sampling
+  const cumProbs = new Float64Array(numStates);
+  let c = 0;
+  for (let i = 0; i < numStates; i++) {
+    c += probs[i];
+    cumProbs[i] = c;
+  }
+
+  const counts: Record<string, number> = {};
+  for (let s = 0; s < shots; s++) {
+    const r = Math.random();
+    let low = 0;
+    let high = numStates - 1;
+    let idx = 0;
+    while (low <= high) {
+      const mid = (low + high) >> 1;
+      if (cumProbs[mid] >= r) {
+        idx = mid;
+        high = mid - 1;
+      } else {
+        low = mid + 1;
+      }
+    }
+    const bs = idx.toString(2).padStart(nQubits, "0");
+    counts[bs] = (counts[bs] || 0) + 1;
+  }
+
+  // Construct raw list of all 512 eigenstates
+  const rawStates: Array<{
+    idx: number;
+    bs: string;
+    energy: number;
+    prob: number;
+    shots: number;
+    isFeasible: boolean;
+    violations: string[];
+    decoded: ReturnType<typeof decodeBitstring>;
+  }> = [];
+
+  let feasibleProbSum = 0;
+  let feasibleStateCount = 0;
+  let shannonEntropy = 0;
+  let sumSquaredProb = 0;
+
+  for (let i = 0; i < numStates; i++) {
+    const bs = i.toString(2).padStart(nQubits, "0");
+    const energy = Number(costs[i].toFixed(2));
+    const p = probs[i];
+    const sCount = counts[bs] || 0;
+    const feas = isBitstringFeasible(bs);
+    const decoded = decodeBitstring(bs, mission);
+
+    if (feas.feasible) {
+      feasibleProbSum += p;
+      feasibleStateCount++;
+    }
+    if (p > 1e-12) {
+      shannonEntropy -= p * Math.log2(p);
+    }
+    sumSquaredProb += p * p;
+
+    rawStates.push({
+      idx: i,
+      bs,
+      energy,
+      prob: p,
+      shots: sCount,
+      isFeasible: feas.feasible,
+      violations: feas.violations,
+      decoded,
+    });
+  }
+
+  // Find true ground state among feasible states
+  const feasibleOnly = rawStates.filter((s) => s.isFeasible);
+  feasibleOnly.sort((a, b) => a.energy - b.energy);
+
+  const groundStateObj = feasibleOnly[0] || rawStates.sort((a, b) => a.energy - b.energy)[0];
+  const firstExcitedObj = feasibleOnly[1] || feasibleOnly[0];
+
+  const groundStateEnergy = groundStateObj.energy;
+  const firstExcitedEnergy = firstExcitedObj ? firstExcitedObj.energy : groundStateEnergy + 5.0;
+  const energySpectralGap = Number((firstExcitedEnergy - groundStateEnergy).toFixed(2));
+  const groundStateFidelity = Number(groundStateObj.prob.toFixed(4));
+  const firstExcitedProb = firstExcitedObj ? firstExcitedObj.prob : 0.001;
+  const groundVsExcitedRatio = Number((groundStateObj.prob / Math.max(1e-5, firstExcitedProb)).toFixed(2));
+
+  // Sort states by probability descending to rank them
+  rawStates.sort((a, b) => b.prob - a.prob);
+
+  const measuredEigenstates: MeasuredEigenstate[] = rawStates.map((s, rankIdx) => ({
+    state_index: s.idx,
+    bitstring: s.bs,
+    qubo_energy: s.energy,
+    probability: Number(s.prob.toFixed(5)),
+    measured_shots: s.shots,
+    is_feasible: s.isFeasible,
+    violations: s.violations,
+    window_name: s.decoded.window_name,
+    trajectory_name: s.decoded.trajectory_name,
+    mode_name: s.decoded.mode_name,
+    is_ground_state: s.bs === groundStateObj.bs,
+    rank: rankIdx + 1,
+  }));
+
+  // Statistical entropy & participation ratio
+  const maxEntropy = 9.0; // log2(512) = 9
+  const normalizedEntropyPct = Number(((shannonEntropy / maxEntropy) * 100).toFixed(1));
+  const effectiveDimension = Number((1.0 / Math.max(1e-5, sumSquaredProb)).toFixed(1));
+
+  // Z-Score test against uniform random distribution (1 / 512 = 0.001953)
+  const uniformP = 1.0 / numStates;
+  const stdError = Math.sqrt((uniformP * (1.0 - uniformP)) / Math.max(1, shots));
+  const zScore = Number(((groundStateObj.prob - uniformP) / Math.max(1e-6, stdError)).toFixed(2));
+
+  // Confidence Score Calculation (0 to 100)
+  // Factors: Ground state probability, feasible subspace ratio, low entropy, circuit fidelity
+  const feasibleScore = Math.min(35, feasibleProbSum * 35);
+  const groundScore = Math.min(30, (groundStateObj.prob / 0.15) * 30);
+  const entropyScore = Math.max(0, (1.0 - shannonEntropy / maxEntropy) * 20);
+  const fidelityScore = totalCircuitFidelity * 15;
+  const rawConfidence = feasibleScore + groundScore + entropyScore + fidelityScore;
+  const confidenceScore = Math.min(99.5, Math.max(12.0, Math.round(rawConfidence)));
+
+  let confidenceTier: "High Confidence" | "Moderate Confidence" | "Low Confidence" = "Moderate Confidence";
+  let confidenceSummary = "";
+
+  if (confidenceScore >= 75) {
+    confidenceTier = "High Confidence";
+    confidenceSummary = `Optimal solution |${groundStateObj.bs}⟩ exhibits strong statevector concentration (${(groundStateObj.prob * 100).toFixed(1)}% prob, Z = +${zScore}). Feasible subspace dominates ${((feasibleProbSum) * 100).toFixed(1)}% of probability mass. High confidence for mission flight profile execution.`;
+  } else if (confidenceScore >= 50) {
+    confidenceTier = "Moderate Confidence";
+    confidenceSummary = `Ground state |${groundStateObj.bs}⟩ is distinct from uniform noise (Z = +${zScore}), but variational mixer dispersion retains ${(100 - feasibleProbSum * 100).toFixed(1)}% probability in boundary penalty subspace. Additional QAOA layers (p ≥ 2) recommended to sharpen state purity.`;
+  } else {
+    confidenceTier = "Low Confidence";
+    confidenceSummary = `Decoherence loss (${decoherenceLossPct}%) or shallow layer depth has spread statevector probability across ${effectiveDimension} effective states. Measurements exhibit noise-dominated dispersion. Increase circuit fidelity or optimize variational parameters.`;
+  }
+
+  const statistics: QuantumFidelityStatistics = {
+    ground_state_fidelity: groundStateFidelity,
+    ground_state_bitstring: groundStateObj.bs,
+    ground_state_energy: groundStateEnergy,
+    first_excited_energy: firstExcitedEnergy,
+    energy_spectral_gap: energySpectralGap,
+    ground_vs_excited_ratio: groundVsExcitedRatio,
+    feasible_mass_pct: Number((feasibleProbSum * 100).toFixed(1)),
+    infeasible_mass_pct: Number(((1.0 - feasibleProbSum) * 100).toFixed(1)),
+    shannon_entropy: Number(shannonEntropy.toFixed(3)),
+    max_entropy: maxEntropy,
+    normalized_entropy_pct: normalizedEntropyPct,
+    effective_dimension: effectiveDimension,
+    confidence_score: confidenceScore,
+    confidence_tier: confidenceTier,
+    confidence_summary: confidenceSummary,
+    z_score_vs_uniform: zScore,
+    decoherence_loss_pct: decoherenceLossPct,
+    circuit_fidelity: Number((totalCircuitFidelity * 100).toFixed(1)),
+    total_shots: shots,
+    layers_p: pLayers,
+  };
+
+  return {
+    eigenstates: measuredEigenstates,
+    statistics,
   };
 }

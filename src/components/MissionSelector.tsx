@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from "react";
 import { Mission } from "../types";
-import { Search, Filter, CheckCircle2, ArrowRight } from "lucide-react";
+import { Search, Filter, CheckCircle2, ArrowRight, Sparkles } from "lucide-react";
 
 interface MissionSelectorProps {
   missions: Mission[];
   selectedMission: Mission;
   onSelectMission: (mission: Mission) => void;
   onProceed: () => void;
+  onOpenCustomInput?: () => void;
 }
 
 export const MissionSelector: React.FC<MissionSelectorProps> = ({
@@ -14,6 +15,7 @@ export const MissionSelector: React.FC<MissionSelectorProps> = ({
   selectedMission,
   onSelectMission,
   onProceed,
+  onOpenCustomInput,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [orbitFilter, setOrbitFilter] = useState("ALL");
@@ -65,6 +67,33 @@ export const MissionSelector: React.FC<MissionSelectorProps> = ({
           <div className="text-2xl font-mono font-bold text-emerald-400 mt-1 tabular-nums">{safeCount}</div>
           <div className="text-xs text-slate-500 mt-1">Risk score &le; 30 / 100</div>
         </div>
+      </div>
+
+      {/* Custom Mission Input Banner */}
+      <div className="p-4 rounded-xl bg-gradient-to-r from-slate-900 via-cyan-950/40 to-slate-900 border border-cyan-800/50 flex flex-wrap items-center justify-between gap-3 shadow-md">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-cyan-950 border border-cyan-700/60 text-cyan-300">
+            <Sparkles className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-xs font-bold text-white flex items-center gap-2">
+              <span>Have Custom Flight or Vehicle Specifications?</span>
+              <span className="px-1.5 py-0.2 bg-cyan-500 text-[10px] text-slate-950 rounded font-mono font-bold uppercase">New</span>
+            </div>
+            <div className="text-[11px] text-slate-400">
+              Input custom rocket, payload, trajectory, and weather parameters to run full classical vs QAOA optimization.
+            </div>
+          </div>
+        </div>
+        {onOpenCustomInput && (
+          <button
+            onClick={onOpenCustomInput}
+            className="px-3.5 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+          >
+            <span>Enter Mission Parameters</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
 
       {/* Filter and Search Bar */}

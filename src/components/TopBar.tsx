@@ -17,9 +17,11 @@ import {
   CheckCircle2,
   BarChart3,
   TrendingUp,
+  ShieldCheck,
   Menu,
   X,
   ChevronRight,
+  Sparkles,
 } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 
@@ -47,6 +49,8 @@ export const NAV_ITEMS = [
   "8. Plan & Export",
   "9. Analytics",
   "10. Sensitivity",
+  "11. Quantum Fidelity",
+  "12. Mission Input",
 ];
 
 export const NAV_CONFIG = [
@@ -60,6 +64,8 @@ export const NAV_CONFIG = [
   { id: 7, step: "08", label: "Mission Plan", shortLabel: "Plan & Export", icon: CheckCircle2, description: "Flight burn profile & CSV" },
   { id: 8, step: "09", label: "Analytics Dashboard", shortLabel: "Analytics", icon: BarChart3, description: "Historical telemetry" },
   { id: 9, step: "10", label: "Sensitivity Analysis", shortLabel: "Sensitivity", icon: TrendingUp, description: "D3 dispersion scatter" },
+  { id: 10, step: "11", label: "Quantum Fidelity", shortLabel: "Fidelity", icon: ShieldCheck, description: "Eigenstate confidence" },
+  { id: 11, step: "12", label: "Mission Input", shortLabel: "Input", icon: Sparkles, description: "Custom parameters & optimize" },
 ];
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -126,7 +132,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/70 border border-cyan-800/60 text-cyan-300 font-semibold">
-                STAGE {activeTab + 1}/10
+                STAGE {activeTab + 1}/{NAV_CONFIG.length}
               </span>
               <span className="text-sm font-bold text-white tracking-tight truncate max-w-[200px] sm:max-w-none">
                 {NAV_CONFIG[activeTab]?.label || NAV_ITEMS[activeTab]}
@@ -171,12 +177,12 @@ export const TopBar: React.FC<TopBarProps> = ({
               <div className="space-y-1 font-mono">
                 <div className="flex items-center justify-between text-[10px] text-slate-400">
                   <span className="text-slate-500 uppercase font-semibold">Workflow Phase</span>
-                  <span className="text-cyan-400 font-bold">{Math.round(((activeTab + 1) / 10) * 100)}%</span>
+                  <span className="text-cyan-400 font-bold">{Math.round(((activeTab + 1) / NAV_CONFIG.length) * 100)}%</span>
                 </div>
                 <div className="w-full bg-slate-900 h-1 rounded-full overflow-hidden border border-slate-800">
                   <div
                     className="bg-cyan-400 h-full rounded-full transition-all duration-300"
-                    style={{ width: `${((activeTab + 1) / 10) * 100}%` }}
+                    style={{ width: `${((activeTab + 1) / NAV_CONFIG.length) * 100}%` }}
                   />
                 </div>
               </div>
@@ -185,7 +191,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             {/* Scrollable Navigation Button Stack - Guaranteed to fit and never cut off */}
             <div className="flex-1 min-h-0 overflow-y-auto space-y-1 py-2 pr-0.5">
               <div className="text-[9px] uppercase font-mono tracking-wider text-slate-500 font-semibold px-2 pb-0.5">
-                Pipeline Stages (1–10)
+                Pipeline Stages (1–{NAV_CONFIG.length})
               </div>
 
               {NAV_CONFIG.map((item) => {
@@ -258,6 +264,18 @@ export const TopBar: React.FC<TopBarProps> = ({
 
           {/* Zone 3: Actions */}
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setActiveTab(11)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
+                activeTab === 11
+                  ? "bg-cyan-500 text-slate-950 font-bold shadow-sm"
+                  : "text-cyan-300 hover:text-white bg-cyan-950/70 hover:bg-cyan-900/80 border border-cyan-800/80"
+              }`}
+              title="Open Custom Mission Input & Optimization Engine"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Mission Input</span>
+            </button>
             {onOpenLogbook && (
               <button
                 onClick={onOpenLogbook}

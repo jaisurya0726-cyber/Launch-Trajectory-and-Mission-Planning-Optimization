@@ -16,6 +16,7 @@ import {
   Layers,
   Zap,
   ShieldAlert,
+  ShieldCheck,
   Cpu,
 } from "lucide-react";
 import {
@@ -34,9 +35,14 @@ import {
 interface QAOAViewProps {
   mission: Mission;
   onProceedToComparison: () => void;
+  onProceedToFidelity?: () => void;
 }
 
-export const QAOAView: React.FC<QAOAViewProps> = ({ mission, onProceedToComparison }) => {
+export const QAOAView: React.FC<QAOAViewProps> = ({
+  mission,
+  onProceedToComparison,
+  onProceedToFidelity,
+}) => {
   const [layersP, setLayersP] = useState<number>(1);
   const [shots, setShots] = useState<number>(1024);
   const [gamma, setGamma] = useState<number>(0.42);
@@ -77,13 +83,25 @@ export const QAOAView: React.FC<QAOAViewProps> = ({ mission, onProceedToComparis
           </div>
         </div>
 
-        <button
-          onClick={onProceedToComparison}
-          className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-950 bg-cyan-400 hover:bg-cyan-300 rounded-lg transition-colors cursor-pointer"
-        >
-          <span>View Comparison Benchmark</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </button>
+        <div className="flex items-center gap-2">
+          {onProceedToFidelity && (
+            <button
+              onClick={onProceedToFidelity}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-mono font-semibold text-cyan-300 bg-cyan-950/70 hover:bg-cyan-900/70 border border-cyan-800/80 rounded-lg transition-colors cursor-pointer"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Analyze Quantum Fidelity</span>
+            </button>
+          )}
+
+          <button
+            onClick={onProceedToComparison}
+            className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-950 bg-cyan-400 hover:bg-cyan-300 rounded-lg transition-colors cursor-pointer"
+          >
+            <span>View Comparison Benchmark</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
 
       {/* Primary Sub-Navigation Tabs: Pure State vs Depth vs Noise Simulation */}

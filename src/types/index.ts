@@ -184,6 +184,49 @@ export interface QAOAConvergenceStep {
 
 export type NoisePreset = "ideal" | "trapped_ion" | "superconducting" | "high_decoherence" | "custom";
 
+export interface MeasuredEigenstate {
+  state_index: number;
+  bitstring: string;
+  qubo_energy: number;
+  probability: number;
+  measured_shots: number;
+  is_feasible: boolean;
+  violations: string[];
+  window_name: string;
+  trajectory_name: string;
+  mode_name: string;
+  is_ground_state: boolean;
+  rank: number;
+}
+
+export interface QuantumFidelityStatistics {
+  ground_state_fidelity: number;
+  ground_state_bitstring: string;
+  ground_state_energy: number;
+  first_excited_energy: number;
+  energy_spectral_gap: number;
+  ground_vs_excited_ratio: number;
+  feasible_mass_pct: number;
+  infeasible_mass_pct: number;
+  shannon_entropy: number;
+  max_entropy: number;
+  normalized_entropy_pct: number;
+  effective_dimension: number;
+  confidence_score: number;
+  confidence_tier: "High Confidence" | "Moderate Confidence" | "Low Confidence";
+  confidence_summary: string;
+  z_score_vs_uniform: number;
+  decoherence_loss_pct: number;
+  circuit_fidelity: number;
+  total_shots: number;
+  layers_p: number;
+}
+
+export interface QAOAFidelityAnalysis {
+  eigenstates: MeasuredEigenstate[];
+  statistics: QuantumFidelityStatistics;
+}
+
 export interface QuantumNoiseConfig {
   enabled: boolean;
   preset: NoisePreset;
@@ -226,5 +269,43 @@ export interface HistoryEntry {
   notes?: string;
   notes_updated_at?: string;
   tags?: string[];
+}
+
+export interface MissionInputFormData {
+  mission_id: string;
+  satellite_name: string;
+  launch_date: string;
+  launch_time: string;
+  launch_site: string;
+  rocket: string;
+  target_orbit: string;
+  altitude: number;
+  inclination: number;
+  rocket_mass: number;
+  fuel_mass: number;
+  thrust: number;
+  specific_impulse: number;
+  payload_mass: number;
+  payload_volume: number;
+  mission_priority: number;
+  delta_v: number;
+  flight_time: number; // in minutes
+  fuel_consumption: number;
+  weather_temperature: number;
+  wind_speed: number;
+  rain: number;
+  weather_condition: string;
+  safety_status: string;
+  risk_score: number;
+  launch_cost: number;
+  available_launch_window: string;
+  window_duration: number; // in minutes
+}
+
+export interface ConstraintCheckResult {
+  name: string;
+  status: "PASS" | "FAIL";
+  message: string;
+  margin: string;
 }
 
