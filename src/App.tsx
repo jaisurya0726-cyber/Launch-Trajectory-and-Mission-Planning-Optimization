@@ -84,6 +84,7 @@ function MainApp() {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState<boolean>(false);
   const [isLogbookOpen, setIsLogbookOpen] = useState<boolean>(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
 
   // Load history from localStorage on startup
   useEffect(() => {
@@ -155,11 +156,13 @@ function MainApp() {
         onOpenHistory={() => setIsHistoryModalOpen(true)}
         onOpenLogbook={() => setIsLogbookOpen(true)}
         notesCount={notesCount}
+        isSidebarOpen={isSidebarOpen}
+        onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
       />
 
       {/* Main Workspace Area */}
-      <div className="flex-1 md:pl-64 flex flex-col transition-all duration-200">
-        <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-6 space-y-6">
+      <div className={`flex-1 ${isSidebarOpen ? "md:pl-64" : "md:pl-0"} flex flex-col transition-all duration-200 min-w-0 w-full overflow-x-hidden`}>
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6 min-w-0">
         <ScientificDisclaimer />
 
         {/* Tab 1: Mission Selection */}

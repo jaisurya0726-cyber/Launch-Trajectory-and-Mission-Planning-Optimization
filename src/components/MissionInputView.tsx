@@ -24,6 +24,8 @@ import {
   XCircle,
   ArrowRight,
   ArrowLeft,
+  ChevronDown,
+  ChevronUp,
   Atom,
   Cpu,
   Layers,
@@ -297,6 +299,45 @@ export const MissionInputView: React.FC<MissionInputViewProps> = ({
   // Helper to update individual field
   const updateField = (field: keyof MissionInputFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // Collapsible sections state for parameter groups
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    mission: true,
+    rocket: true,
+    payload: true,
+    trajectory: true,
+    weather: true,
+    constraints: true,
+  });
+
+  const toggleSection = (sectionKey: string) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [sectionKey]: !prev[sectionKey],
+    }));
+  };
+
+  const handleExpandAll = () => {
+    setExpandedSections({
+      mission: true,
+      rocket: true,
+      payload: true,
+      trajectory: true,
+      weather: true,
+      constraints: true,
+    });
+  };
+
+  const handleCollapseAll = () => {
+    setExpandedSections({
+      mission: false,
+      rocket: false,
+      payload: false,
+      trajectory: false,
+      weather: false,
+      constraints: false,
+    });
   };
 
   // Real-time Physics & Validation calculations
@@ -751,7 +792,29 @@ export const MissionInputView: React.FC<MissionInputViewProps> = ({
               ))}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center rounded-lg bg-slate-900 border border-slate-700/80 p-0.5 text-xs font-mono">
+                <button
+                  type="button"
+                  onClick={handleExpandAll}
+                  className="px-2 py-1 rounded text-slate-300 hover:text-cyan-300 hover:bg-slate-800 transition-colors flex items-center gap-1 cursor-pointer"
+                  title="Expand all parameter sections"
+                >
+                  <ChevronDown className="w-3 h-3 text-cyan-400" />
+                  <span>Expand All</span>
+                </button>
+                <div className="w-px h-3.5 bg-slate-800" />
+                <button
+                  type="button"
+                  onClick={handleCollapseAll}
+                  className="px-2 py-1 rounded text-slate-300 hover:text-cyan-300 hover:bg-slate-800 transition-colors flex items-center gap-1 cursor-pointer"
+                  title="Collapse all parameter sections"
+                >
+                  <ChevronUp className="w-3 h-3 text-cyan-400" />
+                  <span>Collapse All</span>
+                </button>
+              </div>
+
               <button
                 onClick={handleCloneFromActive}
                 className="px-3 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 flex items-center gap-1.5 font-mono cursor-pointer"
@@ -830,491 +893,751 @@ export const MissionInputView: React.FC<MissionInputViewProps> = ({
 
           {/* Form Sections Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* CARD 1: LAUNCH PARAMETERS */}
-            <div className="p-5 rounded-xl bg-slate-900/70 border border-slate-800 space-y-4">
-              <div className="flex items-center gap-2 pb-3 border-b border-slate-800">
-                <Rocket className="w-4 h-4 text-cyan-400" />
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono">
-                  1. Launch Parameters
-                </h3>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div>
-                  <label className="block text-slate-400 font-mono mb-1">Mission ID *</label>
-                  <input
-                    type="text"
-                    value={formData.mission_id}
-                    onChange={(e) => updateField("mission_id", e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                    placeholder="MSN-2026-001"
-                  />
-                  {validation.errors.mission_id && (
-                    <span className="text-[10px] text-rose-400">{validation.errors.mission_id}</span>
+            {/* CARD 1: LAUNCH & MISSION PARAMETERS */}
+            <div className="p-5 rounded-xl bg-slate-900/70 border border-slate-800 space-y-4 transition-all">
+              <button
+                type="button"
+                onClick={() => toggleSection("mission")}
+                className="w-full flex items-center justify-between pb-3 border-b border-slate-800 cursor-pointer group text-left transition-colors"
+                aria-expanded={expandedSections.mission}
+              >
+                <div className="flex items-center gap-2">
+                  <Rocket className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono group-hover:text-cyan-300 transition-colors">
+                    1. Mission &amp; Launch Parameters
+                  </h3>
+                  <span className={`text-[10px] font-mono uppercase px-1.5 py-0.2 rounded border ${
+                    expandedSections.mission
+                      ? "bg-cyan-950 text-cyan-300 border-cyan-800/60"
+                      : "bg-slate-950 text-slate-400 border-slate-800"
+                  }`}>
+                    {expandedSections.mission ? "OPEN" : "COLLAPSED"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 font-mono text-xs text-slate-400 group-hover:text-cyan-300">
+                  <span className="text-[10px] hidden sm:inline uppercase">
+                    {expandedSections.mission ? "Collapse" : "Expand"}
+                  </span>
+                  {expandedSections.mission ? (
+                    <ChevronUp className="w-4 h-4 text-cyan-400" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-cyan-400" />
                   )}
                 </div>
+              </button>
 
-                <div>
-                  <label className="block text-slate-400 font-mono mb-1">Satellite Name *</label>
-                  <input
-                    type="text"
-                    value={formData.satellite_name}
-                    onChange={(e) => updateField("satellite_name", e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                    placeholder="QuantumSat-1"
-                  />
-                  {validation.errors.satellite_name && (
-                    <span className="text-[10px] text-rose-400">{validation.errors.satellite_name}</span>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-slate-400 font-mono mb-1 flex items-center gap-1">
-                    <Calendar className="w-3 h-3 text-cyan-400" />
-                    Launch Date
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.launch_date}
-                    onChange={(e) => updateField("launch_date", e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-400 font-mono mb-1 flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-cyan-400" />
-                    Launch Time (UTC)
-                  </label>
-                  <input
-                    type="time"
-                    value={formData.launch_time}
-                    onChange={(e) => updateField("launch_time", e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                  />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block text-slate-400 font-mono mb-1 flex items-center gap-1">
-                    <MapPin className="w-3 h-3 text-cyan-400" />
-                    Launch Site
-                  </label>
-                  <select
-                    value={formData.launch_site}
-                    onChange={(e) => updateField("launch_site", e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                  >
-                    {LAUNCH_SITES.map((site) => (
-                      <option key={site} value={site}>{site}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-slate-400 font-mono mb-1">Rocket Vehicle</label>
-                  <select
-                    value={formData.rocket}
-                    onChange={(e) => updateField("rocket", e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                  >
-                    {ROCKET_MODELS.map((r) => (
-                      <option key={r} value={r}>{r}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-slate-400 font-mono mb-1">Target Orbit</label>
-                  <select
-                    value={formData.target_orbit}
-                    onChange={(e) => updateField("target_orbit", e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                  >
-                    {TARGET_ORBITS.map((orb) => (
-                      <option key={orb} value={orb}>{orb}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-slate-400 font-mono mb-1">
-                    <span>Altitude (km)</span>
-                    <span className="text-cyan-400 font-bold">{formData.altitude.toLocaleString()} km</span>
+              {!expandedSections.mission ? (
+                <div className="p-3 rounded-lg bg-slate-950/70 border border-slate-800/80 font-mono text-xs flex flex-wrap items-center justify-between gap-2 text-slate-400">
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500">ID:</span>
+                    <strong className="text-white">{formData.mission_id || "Unset"}</strong>
+                    <span className="text-slate-600">|</span>
+                    <span className="text-slate-500">Sat:</span>
+                    <strong className="text-cyan-300">{formData.satellite_name}</strong>
                   </div>
-                  <input
-                    type="number"
-                    min="120"
-                    max="400000"
-                    value={formData.altitude}
-                    onChange={(e) => updateField("altitude", Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                  />
-                  {validation.errors.altitude && (
-                    <span className="text-[10px] text-rose-400">{validation.errors.altitude}</span>
-                  )}
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-slate-400 font-mono mb-1">
-                    <span>Inclination (deg)</span>
-                    <span className="text-cyan-400 font-bold">{formData.inclination}°</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500">Vehicle:</span>
+                    <strong className="text-slate-200">{formData.rocket}</strong>
+                    <span className="text-slate-600">|</span>
+                    <span className="text-slate-500">Orbit:</span>
+                    <strong className="text-emerald-400">{formData.target_orbit}</strong>
+                    <span className="text-slate-500">({formData.altitude} km)</span>
                   </div>
-                  <input
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    max="180"
-                    value={formData.inclination}
-                    onChange={(e) => updateField("inclination", Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                  />
-                  {validation.errors.inclination && (
-                    <span className="text-[10px] text-rose-400">{validation.errors.inclination}</span>
-                  )}
                 </div>
-              </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <label className="block text-slate-400 font-mono mb-1">Mission ID *</label>
+                    <input
+                      type="text"
+                      value={formData.mission_id}
+                      onChange={(e) => updateField("mission_id", e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                      placeholder="MSN-2026-001"
+                    />
+                    {validation.errors.mission_id && (
+                      <span className="text-[10px] text-rose-400">{validation.errors.mission_id}</span>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 font-mono mb-1">Satellite Name *</label>
+                    <input
+                      type="text"
+                      value={formData.satellite_name}
+                      onChange={(e) => updateField("satellite_name", e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                      placeholder="QuantumSat-1"
+                    />
+                    {validation.errors.satellite_name && (
+                      <span className="text-[10px] text-rose-400">{validation.errors.satellite_name}</span>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 font-mono mb-1 flex items-center gap-1">
+                      <Calendar className="w-3 h-3 text-cyan-400" />
+                      Launch Date
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.launch_date}
+                      onChange={(e) => updateField("launch_date", e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 font-mono mb-1 flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-cyan-400" />
+                      Launch Time (UTC)
+                    </label>
+                    <input
+                      type="time"
+                      value={formData.launch_time}
+                      onChange={(e) => updateField("launch_time", e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-slate-400 font-mono mb-1 flex items-center gap-1">
+                      <MapPin className="w-3 h-3 text-cyan-400" />
+                      Launch Site
+                    </label>
+                    <select
+                      value={formData.launch_site}
+                      onChange={(e) => updateField("launch_site", e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                    >
+                      {LAUNCH_SITES.map((site) => (
+                        <option key={site} value={site}>{site}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 font-mono mb-1">Rocket Vehicle</label>
+                    <select
+                      value={formData.rocket}
+                      onChange={(e) => updateField("rocket", e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                    >
+                      {ROCKET_MODELS.map((r) => (
+                        <option key={r} value={r}>{r}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 font-mono mb-1">Target Orbit</label>
+                    <select
+                      value={formData.target_orbit}
+                      onChange={(e) => updateField("target_orbit", e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                    >
+                      {TARGET_ORBITS.map((orb) => (
+                        <option key={orb} value={orb}>{orb}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-slate-400 font-mono mb-1">
+                      <span>Altitude (km)</span>
+                      <span className="text-cyan-400 font-bold">{formData.altitude.toLocaleString()} km</span>
+                    </div>
+                    <input
+                      type="number"
+                      min="120"
+                      max="400000"
+                      value={formData.altitude}
+                      onChange={(e) => updateField("altitude", Number(e.target.value))}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                    />
+                    {validation.errors.altitude && (
+                      <span className="text-[10px] text-rose-400">{validation.errors.altitude}</span>
+                    )}
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-slate-400 font-mono mb-1">
+                      <span>Inclination (deg)</span>
+                      <span className="text-cyan-400 font-bold">{formData.inclination}°</span>
+                    </div>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="180"
+                      value={formData.inclination}
+                      onChange={(e) => updateField("inclination", Number(e.target.value))}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                    />
+                    {validation.errors.inclination && (
+                      <span className="text-[10px] text-rose-400">{validation.errors.inclination}</span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* CARD 2: ROCKET PARAMETERS */}
-            <div className="p-5 rounded-xl bg-slate-900/70 border border-slate-800 space-y-4">
-              <div className="flex items-center gap-2 pb-3 border-b border-slate-800">
-                <Gauge className="w-4 h-4 text-cyan-400" />
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono">
-                  2. Rocket Parameters
-                </h3>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div>
-                  <label className="block text-slate-400 font-mono mb-1">Rocket Mass (Dry, kg) *</label>
-                  <input
-                    type="number"
-                    min="100"
-                    value={formData.rocket_mass}
-                    onChange={(e) => updateField("rocket_mass", Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                  />
-                  {validation.errors.rocket_mass && (
-                    <span className="text-[10px] text-rose-400">{validation.errors.rocket_mass}</span>
+            <div className="p-5 rounded-xl bg-slate-900/70 border border-slate-800 space-y-4 transition-all">
+              <button
+                type="button"
+                onClick={() => toggleSection("rocket")}
+                className="w-full flex items-center justify-between pb-3 border-b border-slate-800 cursor-pointer group text-left transition-colors"
+                aria-expanded={expandedSections.rocket}
+              >
+                <div className="flex items-center gap-2">
+                  <Gauge className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono group-hover:text-cyan-300 transition-colors">
+                    2. Rocket Parameters
+                  </h3>
+                  <span className={`text-[10px] font-mono uppercase px-1.5 py-0.2 rounded border ${
+                    expandedSections.rocket
+                      ? "bg-cyan-950 text-cyan-300 border-cyan-800/60"
+                      : "bg-slate-950 text-slate-400 border-slate-800"
+                  }`}>
+                    {expandedSections.rocket ? "OPEN" : "COLLAPSED"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 font-mono text-xs text-slate-400 group-hover:text-cyan-300">
+                  <span className="text-[10px] hidden sm:inline uppercase">
+                    {expandedSections.rocket ? "Collapse" : "Expand"}
+                  </span>
+                  {expandedSections.rocket ? (
+                    <ChevronUp className="w-4 h-4 text-cyan-400" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-cyan-400" />
                   )}
                 </div>
+              </button>
 
-                <div>
-                  <label className="block text-slate-400 font-mono mb-1">Fuel Mass (Propellant, kg) *</label>
-                  <input
-                    type="number"
-                    min="100"
-                    value={formData.fuel_mass}
-                    onChange={(e) => updateField("fuel_mass", Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                  />
-                  {validation.errors.fuel_mass && (
-                    <span className="text-[10px] text-rose-400">{validation.errors.fuel_mass}</span>
-                  )}
+              {!expandedSections.rocket ? (
+                <div className="p-3 rounded-lg bg-slate-950/70 border border-slate-800/80 font-mono text-xs flex flex-wrap items-center justify-between gap-2 text-slate-400">
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500">Dry Mass:</span>
+                    <strong className="text-white">{(formData.rocket_mass / 1000).toFixed(1)} t</strong>
+                    <span className="text-slate-600">|</span>
+                    <span className="text-slate-500">Fuel:</span>
+                    <strong className="text-cyan-300">{(formData.fuel_mass / 1000).toFixed(1)} t</strong>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500">Thrust:</span>
+                    <strong className="text-amber-400">{formData.thrust.toLocaleString()} kN</strong>
+                    <span className="text-slate-600">|</span>
+                    <span className="text-slate-500">Isp:</span>
+                    <strong className="text-emerald-400">{formData.specific_impulse} s</strong>
+                  </div>
                 </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <label className="block text-slate-400 font-mono mb-1">Rocket Mass (Dry, kg) *</label>
+                    <input
+                      type="number"
+                      min="100"
+                      value={formData.rocket_mass}
+                      onChange={(e) => updateField("rocket_mass", Number(e.target.value))}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                    />
+                    {validation.errors.rocket_mass && (
+                      <span className="text-[10px] text-rose-400">{validation.errors.rocket_mass}</span>
+                    )}
+                  </div>
 
-                <div>
-                  <label className="block text-slate-400 font-mono mb-1">Thrust (kN at liftoff) *</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={formData.thrust}
-                    onChange={(e) => updateField("thrust", Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                  />
-                  {validation.errors.thrust && (
-                    <span className="text-[10px] text-rose-400">{validation.errors.thrust}</span>
-                  )}
-                  {validation.warnings.thrust && (
-                    <span className="text-[10px] text-amber-400">{validation.warnings.thrust}</span>
-                  )}
-                </div>
+                  <div>
+                    <label className="block text-slate-400 font-mono mb-1">Fuel Mass (Propellant, kg) *</label>
+                    <input
+                      type="number"
+                      min="100"
+                      value={formData.fuel_mass}
+                      onChange={(e) => updateField("fuel_mass", Number(e.target.value))}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                    />
+                    {validation.errors.fuel_mass && (
+                      <span className="text-[10px] text-rose-400">{validation.errors.fuel_mass}</span>
+                    )}
+                  </div>
 
-                <div>
-                  <label className="block text-slate-400 font-mono mb-1">Specific Impulse (Isp, s) *</label>
-                  <input
-                    type="number"
-                    min="100"
-                    max="600"
-                    value={formData.specific_impulse}
-                    onChange={(e) => updateField("specific_impulse", Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                  />
-                  {validation.errors.specific_impulse && (
-                    <span className="text-[10px] text-rose-400">{validation.errors.specific_impulse}</span>
-                  )}
-                  {validation.warnings.specific_impulse && (
-                    <span className="text-[10px] text-amber-400">{validation.warnings.specific_impulse}</span>
-                  )}
-                </div>
+                  <div>
+                    <label className="block text-slate-400 font-mono mb-1">Thrust (kN at liftoff) *</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={formData.thrust}
+                      onChange={(e) => updateField("thrust", Number(e.target.value))}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                    />
+                    {validation.errors.thrust && (
+                      <span className="text-[10px] text-rose-400">{validation.errors.thrust}</span>
+                    )}
+                    {validation.warnings.thrust && (
+                      <span className="text-[10px] text-amber-400">{validation.warnings.thrust}</span>
+                    )}
+                  </div>
 
-                {/* Rocket Diagnostics Bar */}
-                <div className="sm:col-span-2 p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 flex items-center justify-between text-[11px] font-mono text-slate-400">
-                  <span>Exhaust Velocity ($v_e$): <strong className="text-white">{(formData.specific_impulse * G0).toFixed(0)} m/s</strong></span>
-                  <span>Liftoff Thrust: <strong className="text-cyan-400">{(formData.thrust).toLocaleString()} kN</strong></span>
+                  <div>
+                    <label className="block text-slate-400 font-mono mb-1">Specific Impulse (Isp, s) *</label>
+                    <input
+                      type="number"
+                      min="100"
+                      max="600"
+                      value={formData.specific_impulse}
+                      onChange={(e) => updateField("specific_impulse", Number(e.target.value))}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                    />
+                    {validation.errors.specific_impulse && (
+                      <span className="text-[10px] text-rose-400">{validation.errors.specific_impulse}</span>
+                    )}
+                    {validation.warnings.specific_impulse && (
+                      <span className="text-[10px] text-amber-400">{validation.warnings.specific_impulse}</span>
+                    )}
+                  </div>
+
+                  {/* Rocket Diagnostics Bar */}
+                  <div className="sm:col-span-2 p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 flex items-center justify-between text-[11px] font-mono text-slate-400">
+                    <span>Exhaust Velocity ($v_e$): <strong className="text-white">{(formData.specific_impulse * G0).toFixed(0)} m/s</strong></span>
+                    <span>Liftoff Thrust: <strong className="text-cyan-400">{(formData.thrust).toLocaleString()} kN</strong></span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* CARD 3: PAYLOAD PARAMETERS */}
-            <div className="p-5 rounded-xl bg-slate-900/70 border border-slate-800 space-y-4">
-              <div className="flex items-center gap-2 pb-3 border-b border-slate-800">
-                <Weight className="w-4 h-4 text-cyan-400" />
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono">
-                  3. Payload Parameters
-                </h3>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                <div>
-                  <label className="block text-slate-400 font-mono mb-1">Payload Mass (kg) *</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={formData.payload_mass}
-                    onChange={(e) => updateField("payload_mass", Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                  />
-                  {validation.errors.payload_mass && (
-                    <span className="text-[10px] text-rose-400">{validation.errors.payload_mass}</span>
+            <div className="p-5 rounded-xl bg-slate-900/70 border border-slate-800 space-y-4 transition-all">
+              <button
+                type="button"
+                onClick={() => toggleSection("payload")}
+                className="w-full flex items-center justify-between pb-3 border-b border-slate-800 cursor-pointer group text-left transition-colors"
+                aria-expanded={expandedSections.payload}
+              >
+                <div className="flex items-center gap-2">
+                  <Weight className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono group-hover:text-cyan-300 transition-colors">
+                    3. Payload Parameters
+                  </h3>
+                  <span className={`text-[10px] font-mono uppercase px-1.5 py-0.2 rounded border ${
+                    expandedSections.payload
+                      ? "bg-cyan-950 text-cyan-300 border-cyan-800/60"
+                      : "bg-slate-950 text-slate-400 border-slate-800"
+                  }`}>
+                    {expandedSections.payload ? "OPEN" : "COLLAPSED"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 font-mono text-xs text-slate-400 group-hover:text-cyan-300">
+                  <span className="text-[10px] hidden sm:inline uppercase">
+                    {expandedSections.payload ? "Collapse" : "Expand"}
+                  </span>
+                  {expandedSections.payload ? (
+                    <ChevronUp className="w-4 h-4 text-cyan-400" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-cyan-400" />
                   )}
                 </div>
+              </button>
 
-                <div>
-                  <label className="block text-slate-400 font-mono mb-1">Payload Volume (m³)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.5"
-                    value={formData.payload_volume}
-                    onChange={(e) => updateField("payload_volume", Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                  />
+              {!expandedSections.payload ? (
+                <div className="p-3 rounded-lg bg-slate-950/70 border border-slate-800/80 font-mono text-xs flex flex-wrap items-center justify-between gap-2 text-slate-400">
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500">Mass:</span>
+                    <strong className="text-white">{formData.payload_mass.toLocaleString()} kg</strong>
+                    <span className="text-slate-600">|</span>
+                    <span className="text-slate-500">Volume:</span>
+                    <strong className="text-cyan-300">{formData.payload_volume} m³</strong>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500">Priority:</span>
+                    <strong className="text-amber-400">Tier {formData.mission_priority}</strong>
+                    <span className="text-slate-600">|</span>
+                    <span className="text-slate-500">Density:</span>
+                    <strong className="text-emerald-400">{formData.payload_volume > 0 ? (formData.payload_mass / formData.payload_volume).toFixed(1) : 0} kg/m³</strong>
+                  </div>
                 </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <label className="block text-slate-400 font-mono mb-1">Payload Mass (kg) *</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.payload_mass}
+                        onChange={(e) => updateField("payload_mass", Number(e.target.value))}
+                        className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                      />
+                      {validation.errors.payload_mass && (
+                        <span className="text-[10px] text-rose-400">{validation.errors.payload_mass}</span>
+                      )}
+                    </div>
 
-                <div>
-                  <label className="block text-slate-400 font-mono mb-1">Mission Priority</label>
-                  <select
-                    value={formData.mission_priority}
-                    onChange={(e) => updateField("mission_priority", Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                  >
-                    <option value={1}>Tier 1 (National Critical)</option>
-                    <option value={2}>Tier 2 (High Commercial)</option>
-                    <option value={3}>Tier 3 (Nominal Commercial)</option>
-                    <option value={4}>Tier 4 (Secondary Rideshare)</option>
-                    <option value={5}>Tier 5 (Experimental / Tech Demo)</option>
-                  </select>
-                </div>
-              </div>
+                    <div>
+                      <label className="block text-slate-400 font-mono mb-1">Payload Volume (m³)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.5"
+                        value={formData.payload_volume}
+                        onChange={(e) => updateField("payload_volume", Number(e.target.value))}
+                        className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                      />
+                    </div>
 
-              <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 text-[11px] font-mono text-slate-400 flex items-center justify-between">
-                <span>Payload Density: <strong className="text-white">{formData.payload_volume > 0 ? (formData.payload_mass / formData.payload_volume).toFixed(1) : 0} kg/m³</strong></span>
-                <span>Priority Multiplier: <strong className="text-amber-400">×{((6 - formData.mission_priority) * 0.2 + 0.8).toFixed(2)}</strong></span>
-              </div>
+                    <div>
+                      <label className="block text-slate-400 font-mono mb-1">Mission Priority</label>
+                      <select
+                        value={formData.mission_priority}
+                        onChange={(e) => updateField("mission_priority", Number(e.target.value))}
+                        className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                      >
+                        <option value={1}>Tier 1 (National Critical)</option>
+                        <option value={2}>Tier 2 (High Commercial)</option>
+                        <option value={3}>Tier 3 (Nominal Commercial)</option>
+                        <option value={4}>Tier 4 (Secondary Rideshare)</option>
+                        <option value={5}>Tier 5 (Experimental / Tech Demo)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 text-[11px] font-mono text-slate-400 flex items-center justify-between">
+                    <span>Payload Density: <strong className="text-white">{formData.payload_volume > 0 ? (formData.payload_mass / formData.payload_volume).toFixed(1) : 0} kg/m³</strong></span>
+                    <span>Priority Multiplier: <strong className="text-amber-400">×{((6 - formData.mission_priority) * 0.2 + 0.8).toFixed(2)}</strong></span>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* CARD 4: TRAJECTORY PARAMETERS */}
-            <div className="p-5 rounded-xl bg-slate-900/70 border border-slate-800 space-y-4">
-              <div className="flex items-center gap-2 pb-3 border-b border-slate-800">
-                <Activity className="w-4 h-4 text-cyan-400" />
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono">
-                  4. Trajectory Parameters
-                </h3>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                <div>
-                  <label className="block text-slate-400 font-mono mb-1">Delta-V (km/s) *</label>
-                  <input
-                    type="number"
-                    step="0.05"
-                    min="1"
-                    value={formData.delta_v}
-                    onChange={(e) => updateField("delta_v", Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                  />
-                  {validation.errors.delta_v && (
-                    <span className="text-[10px] text-rose-400">{validation.errors.delta_v}</span>
+            <div className="p-5 rounded-xl bg-slate-900/70 border border-slate-800 space-y-4 transition-all">
+              <button
+                type="button"
+                onClick={() => toggleSection("trajectory")}
+                className="w-full flex items-center justify-between pb-3 border-b border-slate-800 cursor-pointer group text-left transition-colors"
+                aria-expanded={expandedSections.trajectory}
+              >
+                <div className="flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono group-hover:text-cyan-300 transition-colors">
+                    4. Trajectory Parameters
+                  </h3>
+                  <span className={`text-[10px] font-mono uppercase px-1.5 py-0.2 rounded border ${
+                    expandedSections.trajectory
+                      ? "bg-cyan-950 text-cyan-300 border-cyan-800/60"
+                      : "bg-slate-950 text-slate-400 border-slate-800"
+                  }`}>
+                    {expandedSections.trajectory ? "OPEN" : "COLLAPSED"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 font-mono text-xs text-slate-400 group-hover:text-cyan-300">
+                  <span className="text-[10px] hidden sm:inline uppercase">
+                    {expandedSections.trajectory ? "Collapse" : "Expand"}
+                  </span>
+                  {expandedSections.trajectory ? (
+                    <ChevronUp className="w-4 h-4 text-cyan-400" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-cyan-400" />
                   )}
                 </div>
+              </button>
 
-                <div>
-                  <label className="block text-slate-400 font-mono mb-1">Flight Time (minutes) *</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    min="1"
-                    value={formData.flight_time}
-                    onChange={(e) => updateField("flight_time", Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                  />
-                  {validation.errors.flight_time && (
-                    <span className="text-[10px] text-rose-400">{validation.errors.flight_time}</span>
-                  )}
+              {!expandedSections.trajectory ? (
+                <div className="p-3 rounded-lg bg-slate-950/70 border border-slate-800/80 font-mono text-xs flex flex-wrap items-center justify-between gap-2 text-slate-400">
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500">Δv:</span>
+                    <strong className="text-white">{formData.delta_v} km/s</strong>
+                    <span className="text-slate-600">|</span>
+                    <span className="text-slate-500">Flight Time:</span>
+                    <strong className="text-cyan-300">{formData.flight_time} min</strong>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500">Fuel Consumption:</span>
+                    <strong className="text-emerald-400">{formData.fuel_consumption.toLocaleString()} kg</strong>
+                  </div>
                 </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <label className="block text-slate-400 font-mono mb-1">Delta-V (km/s) *</label>
+                      <input
+                        type="number"
+                        step="0.05"
+                        min="1"
+                        value={formData.delta_v}
+                        onChange={(e) => updateField("delta_v", Number(e.target.value))}
+                        className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                      />
+                      {validation.errors.delta_v && (
+                        <span className="text-[10px] text-rose-400">{validation.errors.delta_v}</span>
+                      )}
+                    </div>
 
-                <div>
-                  <label className="block text-slate-400 font-mono mb-1">Fuel Consumption (kg) *</label>
-                  <input
-                    type="number"
-                    min="100"
-                    value={formData.fuel_consumption}
-                    onChange={(e) => updateField("fuel_consumption", Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                  />
-                  {validation.errors.fuel_consumption && (
-                    <span className="text-[10px] text-rose-400">{validation.errors.fuel_consumption}</span>
-                  )}
-                </div>
-              </div>
+                    <div>
+                      <label className="block text-slate-400 font-mono mb-1">Flight Time (minutes) *</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="1"
+                        value={formData.flight_time}
+                        onChange={(e) => updateField("flight_time", Number(e.target.value))}
+                        className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                      />
+                      {validation.errors.flight_time && (
+                        <span className="text-[10px] text-rose-400">{validation.errors.flight_time}</span>
+                      )}
+                    </div>
 
-              <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 text-[11px] font-mono text-slate-400 flex items-center justify-between">
-                <span>Fuel Margin: <strong className={formData.fuel_mass >= formData.fuel_consumption ? "text-emerald-400" : "text-rose-400"}>
-                  {(((formData.fuel_mass - formData.fuel_consumption) / Math.max(1, formData.fuel_mass)) * 100).toFixed(1)}%
-                </strong></span>
-                <span>Internal Units: <strong className="text-white">{(formData.flight_time * 60).toFixed(0)} seconds</strong></span>
-              </div>
+                    <div>
+                      <label className="block text-slate-400 font-mono mb-1">Fuel Consumption (kg) *</label>
+                      <input
+                        type="number"
+                        min="100"
+                        value={formData.fuel_consumption}
+                        onChange={(e) => updateField("fuel_consumption", Number(e.target.value))}
+                        className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                      />
+                      {validation.errors.fuel_consumption && (
+                        <span className="text-[10px] text-rose-400">{validation.errors.fuel_consumption}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 text-[11px] font-mono text-slate-400 flex items-center justify-between">
+                    <span>Fuel Margin: <strong className={formData.fuel_mass >= formData.fuel_consumption ? "text-emerald-400" : "text-rose-400"}>
+                      {(((formData.fuel_mass - formData.fuel_consumption) / Math.max(1, formData.fuel_mass)) * 100).toFixed(1)}%
+                    </strong></span>
+                    <span>Internal Units: <strong className="text-white">{(formData.flight_time * 60).toFixed(0)} seconds</strong></span>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* CARD 5: WEATHER PARAMETERS */}
-            <div className="p-5 rounded-xl bg-slate-900/70 border border-slate-800 space-y-4">
-              <div className="flex items-center gap-2 pb-3 border-b border-slate-800">
-                <Wind className="w-4 h-4 text-cyan-400" />
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono">
-                  5. Weather Parameters
-                </h3>
-              </div>
+            <div className="p-5 rounded-xl bg-slate-900/70 border border-slate-800 space-y-4 transition-all">
+              <button
+                type="button"
+                onClick={() => toggleSection("weather")}
+                className="w-full flex items-center justify-between pb-3 border-b border-slate-800 cursor-pointer group text-left transition-colors"
+                aria-expanded={expandedSections.weather}
+              >
+                <div className="flex items-center gap-2">
+                  <Wind className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono group-hover:text-cyan-300 transition-colors">
+                    5. Weather Parameters
+                  </h3>
+                  <span className={`text-[10px] font-mono uppercase px-1.5 py-0.2 rounded border ${
+                    expandedSections.weather
+                      ? "bg-cyan-950 text-cyan-300 border-cyan-800/60"
+                      : "bg-slate-950 text-slate-400 border-slate-800"
+                  }`}>
+                    {expandedSections.weather ? "OPEN" : "COLLAPSED"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 font-mono text-xs text-slate-400 group-hover:text-cyan-300">
+                  <span className="text-[10px] hidden sm:inline uppercase">
+                    {expandedSections.weather ? "Collapse" : "Expand"}
+                  </span>
+                  {expandedSections.weather ? (
+                    <ChevronUp className="w-4 h-4 text-cyan-400" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-cyan-400" />
+                  )}
+                </div>
+              </button>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div>
-                  <div className="flex justify-between text-slate-400 font-mono mb-1">
-                    <span>Temperature (°C)</span>
-                    <span className="text-cyan-400 font-bold">{formData.weather_temperature}°C</span>
+              {!expandedSections.weather ? (
+                <div className="p-3 rounded-lg bg-slate-950/70 border border-slate-800/80 font-mono text-xs flex flex-wrap items-center justify-between gap-2 text-slate-400">
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500">Temp:</span>
+                    <strong className="text-white">{formData.weather_temperature} °C</strong>
+                    <span className="text-slate-600">|</span>
+                    <span className="text-slate-500">Wind:</span>
+                    <strong className="text-cyan-300">{formData.wind_speed} m/s</strong>
                   </div>
-                  <input
-                    type="number"
-                    value={formData.weather_temperature}
-                    onChange={(e) => updateField("weather_temperature", Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-slate-400 font-mono mb-1">
-                    <span>Wind Speed (m/s)</span>
-                    <span className="text-cyan-400 font-bold">{formData.wind_speed} m/s</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500">Rain:</span>
+                    <strong className="text-slate-200">{formData.rain} mm/h</strong>
+                    <span className="text-slate-600">|</span>
+                    <span className="text-slate-500">Condition:</span>
+                    <strong className="text-emerald-400">{formData.weather_condition}</strong>
                   </div>
-                  <input
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    value={formData.wind_speed}
-                    onChange={(e) => updateField("wind_speed", Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                  />
                 </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <div className="flex justify-between text-slate-400 font-mono mb-1">
+                      <span>Temperature (°C)</span>
+                      <span className="text-cyan-400 font-bold">{formData.weather_temperature}°C</span>
+                    </div>
+                    <input
+                      type="number"
+                      value={formData.weather_temperature}
+                      onChange={(e) => updateField("weather_temperature", Number(e.target.value))}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-slate-400 font-mono mb-1">Rain (mm/h)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    value={formData.rain}
-                    onChange={(e) => updateField("rain", Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                  />
-                </div>
+                  <div>
+                    <div className="flex justify-between text-slate-400 font-mono mb-1">
+                      <span>Wind Speed (m/s)</span>
+                      <span className="text-cyan-400 font-bold">{formData.wind_speed} m/s</span>
+                    </div>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={formData.wind_speed}
+                      onChange={(e) => updateField("wind_speed", Number(e.target.value))}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-slate-400 font-mono mb-1">Weather Condition</label>
-                  <select
-                    value={formData.weather_condition}
-                    onChange={(e) => updateField("weather_condition", e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                  >
-                    {WEATHER_CONDITIONS.map((cond) => (
-                      <option key={cond} value={cond}>{cond}</option>
-                    ))}
-                  </select>
+                  <div>
+                    <label className="block text-slate-400 font-mono mb-1">Rain (mm/h)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={formData.rain}
+                      onChange={(e) => updateField("rain", Number(e.target.value))}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 font-mono mb-1">Weather Condition</label>
+                    <select
+                      value={formData.weather_condition}
+                      onChange={(e) => updateField("weather_condition", e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                    >
+                      {WEATHER_CONDITIONS.map((cond) => (
+                        <option key={cond} value={cond}>{cond}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* CARD 6: MISSION CONSTRAINTS */}
-            <div className="p-5 rounded-xl bg-slate-900/70 border border-slate-800 space-y-4">
-              <div className="flex items-center gap-2 pb-3 border-b border-slate-800">
-                <ShieldCheck className="w-4 h-4 text-cyan-400" />
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono">
-                  6. Mission Constraints
-                </h3>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div>
-                  <label className="block text-slate-400 font-mono mb-1">Safety Status</label>
-                  <select
-                    value={formData.safety_status}
-                    onChange={(e) => updateField("safety_status", e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                  >
-                    {SAFETY_STATUSES.map((st) => (
-                      <option key={st} value={st}>{st}</option>
-                    ))}
-                  </select>
+            <div className="p-5 rounded-xl bg-slate-900/70 border border-slate-800 space-y-4 transition-all">
+              <button
+                type="button"
+                onClick={() => toggleSection("constraints")}
+                className="w-full flex items-center justify-between pb-3 border-b border-slate-800 cursor-pointer group text-left transition-colors"
+                aria-expanded={expandedSections.constraints}
+              >
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono group-hover:text-cyan-300 transition-colors">
+                    6. Mission Constraints
+                  </h3>
+                  <span className={`text-[10px] font-mono uppercase px-1.5 py-0.2 rounded border ${
+                    expandedSections.constraints
+                      ? "bg-cyan-950 text-cyan-300 border-cyan-800/60"
+                      : "bg-slate-950 text-slate-400 border-slate-800"
+                  }`}>
+                    {expandedSections.constraints ? "OPEN" : "COLLAPSED"}
+                  </span>
                 </div>
+                <div className="flex items-center gap-1.5 font-mono text-xs text-slate-400 group-hover:text-cyan-300">
+                  <span className="text-[10px] hidden sm:inline uppercase">
+                    {expandedSections.constraints ? "Collapse" : "Expand"}
+                  </span>
+                  {expandedSections.constraints ? (
+                    <ChevronUp className="w-4 h-4 text-cyan-400" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-cyan-400" />
+                  )}
+                </div>
+              </button>
 
-                <div>
-                  <div className="flex justify-between text-slate-400 font-mono mb-1">
-                    <span>Risk Score (0 - 100)</span>
-                    <span className={`font-bold ${formData.risk_score > 50 ? "text-rose-400" : "text-emerald-400"}`}>{formData.risk_score}</span>
+              {!expandedSections.constraints ? (
+                <div className="p-3 rounded-lg bg-slate-950/70 border border-slate-800/80 font-mono text-xs flex flex-wrap items-center justify-between gap-2 text-slate-400">
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500">Safety:</span>
+                    <strong className={formData.safety_status.includes("NO-GO") ? "text-rose-400" : "text-emerald-400"}>{formData.safety_status}</strong>
+                    <span className="text-slate-600">|</span>
+                    <span className="text-slate-500">Risk:</span>
+                    <strong className="text-amber-400">{formData.risk_score}/100</strong>
                   </div>
-                  <input
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    max="100"
-                    value={formData.risk_score}
-                    onChange={(e) => updateField("risk_score", Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                  />
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500">Cost:</span>
+                    <strong className="text-white">${formData.launch_cost}M</strong>
+                    <span className="text-slate-600">|</span>
+                    <span className="text-slate-500">Window:</span>
+                    <strong className="text-cyan-300">{formData.window_duration} min</strong>
+                  </div>
                 </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <label className="block text-slate-400 font-mono mb-1">Safety Status</label>
+                    <select
+                      value={formData.safety_status}
+                      onChange={(e) => updateField("safety_status", e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                    >
+                      {SAFETY_STATUSES.map((st) => (
+                        <option key={st} value={st}>{st}</option>
+                      ))}
+                    </select>
+                  </div>
 
-                <div>
-                  <label className="block text-slate-400 font-mono mb-1">Launch Cost (Million USD)</label>
-                  <input
-                    type="number"
-                    step="0.5"
-                    min="1"
-                    value={formData.launch_cost}
-                    onChange={(e) => updateField("launch_cost", Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                  />
-                </div>
+                  <div>
+                    <div className="flex justify-between text-slate-400 font-mono mb-1">
+                      <span>Risk Score (0 - 100)</span>
+                      <span className={`font-bold ${formData.risk_score > 50 ? "text-rose-400" : "text-emerald-400"}`}>{formData.risk_score}</span>
+                    </div>
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      max="100"
+                      value={formData.risk_score}
+                      onChange={(e) => updateField("risk_score", Number(e.target.value))}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-slate-400 font-mono mb-1">Window Duration (min)</label>
-                  <input
-                    type="number"
-                    min="15"
-                    value={formData.window_duration}
-                    onChange={(e) => updateField("window_duration", Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-slate-400 font-mono mb-1">Launch Cost (Million USD)</label>
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="1"
+                      value={formData.launch_cost}
+                      onChange={(e) => updateField("launch_cost", Number(e.target.value))}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
 
-                <div className="sm:col-span-2">
-                  <label className="block text-slate-400 font-mono mb-1">Available Launch Window</label>
-                  <input
-                    type="text"
-                    value={formData.available_launch_window}
-                    onChange={(e) => updateField("available_launch_window", e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                    placeholder="14:00 - 16:30 UTC"
-                  />
+                  <div>
+                    <label className="block text-slate-400 font-mono mb-1">Window Duration (min)</label>
+                    <input
+                      type="number"
+                      min="15"
+                      value={formData.window_duration}
+                      onChange={(e) => updateField("window_duration", Number(e.target.value))}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-slate-400 font-mono mb-1">Available Launch Window</label>
+                    <input
+                      type="text"
+                      value={formData.available_launch_window}
+                      onChange={(e) => updateField("available_launch_window", e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                      placeholder="14:00 - 16:30 UTC"
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 

@@ -1,5 +1,24 @@
 @import "tailwindcss";
 
+html {
+  overflow-x: hidden;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  overflow-x: hidden;
+  min-height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 /* ==========================================================================
    LIGHT THEME DESIGN SYSTEM & COLOR TOKEN OVERRIDES
    ========================================================================== */

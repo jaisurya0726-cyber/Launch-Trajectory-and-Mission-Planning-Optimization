@@ -21,7 +21,10 @@ import {
   Menu,
   X,
   ChevronRight,
+  ChevronDown,
   Sparkles,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 
@@ -36,6 +39,8 @@ interface TopBarProps {
   onOpenHistory: () => void;
   onOpenLogbook?: () => void;
   notesCount?: number;
+  isSidebarOpen?: boolean;
+  onToggleSidebar?: () => void;
 }
 
 export const NAV_ITEMS = [
@@ -79,22 +84,28 @@ export const TopBar: React.FC<TopBarProps> = ({
   onOpenHistory,
   onOpenLogbook,
   notesCount,
+  isSidebarOpen,
+  onToggleSidebar,
 }) => {
   const { isDark, toggleTheme } = useTheme();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [internalSidebarOpen, setInternalSidebarOpen] = useState(true);
+  const [isStagesListExpanded, setIsStagesListExpanded] = useState(true);
+
+  const sidebarOpen = isSidebarOpen !== undefined ? isSidebarOpen : internalSidebarOpen;
+  const handleToggleSidebar = onToggleSidebar || (() => setInternalSidebarOpen((prev) => !prev));
 
   return (
     <>
       {/* Mobile Drawer Backdrop */}
-      {isMobileMenuOpen && (
+      {sidebarOpen && (
         <div
-          onClick={() => setIsMobileMenuOpen(false)}
+          onClick={handleToggleSidebar}
           className="fixed inset-0 bg-black/60 z-40 md:hidden"
         />
       )}
 
       {/* Top Header - Opaque bg so position:fixed on nav correctly anchors to the viewport */}
-      <header className="border-b border-slate-800 bg-[#07090e] sticky top-0 z-30 md:pl-64 transition-all duration-200">
+      <header className={`border-b border-slate-800 bg-[#07090e] sticky top-0 z-30 ${sidebarOpen ? "md:pl-64" : "md:pl-0"} transition-all duration-200`}>
         {/* Precision Telemetry Ribbon */}
         <div className="px-6 py-1.5 border-b border-slate-800/80 bg-slate-950/60 flex items-center justify-between text-xs text-slate-400 font-mono tabular-nums overflow-x-auto">
           <div className="flex items-center gap-2 whitespace-nowrap">
@@ -120,30 +131,60 @@ export const TopBar: React.FC<TopBarProps> = ({
 
         {/* Main Top Bar: 3-Zone Contract */}
         <div className="px-6 py-2.5 flex items-center justify-between gap-4">
-          {/* Zone 1: Mobile Hamburger + Current Workflow Stage indicator */}
-          <div className="flex items-center gap-3">
+          {/* Zone 1: Workflow Phase Toggle Button + Current Workflow Stage indicator */}
+          <div className="flex items-center gap-2.5">
             <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white cursor-pointer"
-              aria-label="Toggle navigation sidebar"
+              onClick={handleToggleSidebar}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border font-mono text-xs transition-all cursor-pointer group shadow-sm ${
+                sidebarOpen
+                  ? "bg-cyan-950/70 hover:bg-cyan-900/80 border-cyan-500/50 text-cyan-200 shadow-cyan-950/40"
+                  : "bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-300"
+              }`}
+              title={sidebarOpen ? "Click to close Workflow Phase sidebar" : "Click to open Workflow Phase sidebar"}
+              aria-label={sidebarOpen ? "Close Workflow Phase navigation panel" : "Open Workflow Phase navigation panel"}
             >
-              {isMobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+              {sidebarOpen ? (
+                <PanelLeftClose className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform shrink-0" />
+              ) : (
+                <PanelLeftOpen className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform shrink-0" />
+              )}
+              <span className="font-semibold text-xs whitespace-nowrap">Workflow Phase</span>
+              <div className="flex items-center rounded bg-slate-950/90 p-0.5 border border-slate-800 text-[10px]">
+                <span
+                  className={`px-1.5 py-0.5 rounded font-bold transition-all ${
+                    sidebarOpen
+                      ? "bg-cyan-500 text-slate-950 shadow-xs"
+                      : "text-slate-500"
+                  }`}
+                >
+                  OPEN
+                </span>
+                <span
+                  className={`px-1.5 py-0.5 rounded font-bold transition-all ${
+                    !sidebarOpen
+                      ? "bg-slate-700 text-slate-200 shadow-xs"
+                      : "text-slate-500"
+                  }`}
+                >
+                  CLOSE
+                </span>
+              </div>
             </button>
 
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/70 border border-cyan-800/60 text-cyan-300 font-semibold">
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/70 border border-cyan-800/60 text-cyan-300 font-semibold whitespace-nowrap">
                 STAGE {activeTab + 1}/{NAV_CONFIG.length}
               </span>
-              <span className="text-sm font-bold text-white tracking-tight truncate max-w-[200px] sm:max-w-none">
+              <span className="text-sm font-bold text-white tracking-tight truncate max-w-[130px] sm:max-w-none">
                 {NAV_CONFIG[activeTab]?.label || NAV_ITEMS[activeTab]}
               </span>
             </div>
           </div>
 
-          {/* Zone 2: FULLY VISIBLE VERTICAL SIDEBAR (Matches selector div#root > div:nth-of-type(1) > header:nth-of-type(1) > div:nth-of-type(2) > nav:nth-of-type(1)) */}
+          {/* Zone 2: FULLY VISIBLE VERTICAL SIDEBAR */}
           <nav
             className={`fixed left-0 top-0 bottom-0 w-64 bg-[#07090e] border-r border-slate-800 z-50 flex flex-col justify-between p-3 shadow-2xl transition-transform duration-200 ${
-              isMobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+              sidebarOpen ? "translate-x-0" : "-translate-x-full"
             }`}
           >
             {/* Top Brand & Progress */}
@@ -163,21 +204,32 @@ export const TopBar: React.FC<TopBarProps> = ({
                   </div>
                 </div>
 
-                {/* Mobile Close Button */}
+                {/* Close Button on sidebar */}
                 <button
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="md:hidden p-1 text-slate-400 hover:text-white rounded hover:bg-slate-800/60 cursor-pointer"
-                  aria-label="Close sidebar"
+                  onClick={handleToggleSidebar}
+                  className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800/60 border border-transparent hover:border-slate-700/60 transition-colors cursor-pointer flex items-center gap-1 font-mono text-[10px]"
+                  title="Close Workflow Phase sidebar"
+                  aria-label="Close Workflow Phase sidebar"
                 >
-                  <X className="w-4 h-4" />
+                  <PanelLeftClose className="w-3.5 h-3.5 text-cyan-400" />
+                  <span className="hidden sm:inline">Close</span>
                 </button>
               </div>
 
-              {/* Progress Bar */}
+              {/* Progress Bar with toggle for stage list */}
               <div className="space-y-1 font-mono">
                 <div className="flex items-center justify-between text-[10px] text-slate-400">
                   <span className="text-slate-500 uppercase font-semibold">Workflow Phase</span>
-                  <span className="text-cyan-400 font-bold">{Math.round(((activeTab + 1) / NAV_CONFIG.length) * 100)}%</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-cyan-400 font-bold">{Math.round(((activeTab + 1) / NAV_CONFIG.length) * 100)}%</span>
+                    <button
+                      onClick={() => setIsStagesListExpanded((prev) => !prev)}
+                      className="text-[9px] text-slate-400 hover:text-cyan-300 flex items-center cursor-pointer ml-0.5"
+                      title={isStagesListExpanded ? "Collapse workflow stages list" : "Expand workflow stages list"}
+                    >
+                      {isStagesListExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                    </button>
+                  </div>
                 </div>
                 <div className="w-full bg-slate-900 h-1 rounded-full overflow-hidden border border-slate-800">
                   <div
@@ -188,56 +240,67 @@ export const TopBar: React.FC<TopBarProps> = ({
               </div>
             </div>
 
-            {/* Scrollable Navigation Button Stack - Guaranteed to fit and never cut off */}
-            <div className="flex-1 min-h-0 overflow-y-auto space-y-1 py-2 pr-0.5">
-              <div className="text-[9px] uppercase font-mono tracking-wider text-slate-500 font-semibold px-2 pb-0.5">
-                Pipeline Stages (1–{NAV_CONFIG.length})
-              </div>
+            {/* Scrollable Navigation Button Stack */}
+            {isStagesListExpanded ? (
+              <div className="flex-1 min-h-0 overflow-y-auto space-y-1 py-2 pr-0.5">
+                <div className="text-[9px] uppercase font-mono tracking-wider text-slate-500 font-semibold px-2 pb-0.5">
+                  Pipeline Stages (1–{NAV_CONFIG.length})
+                </div>
 
-              {NAV_CONFIG.map((item) => {
-                const Icon = item.icon;
-                const isActive = activeTab === item.id;
+                {NAV_CONFIG.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
 
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      setActiveTab(item.id);
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className={`w-full text-left flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer group ${
-                      isActive
-                        ? "bg-cyan-500/20 text-white border border-cyan-500/50 shadow-xs shadow-cyan-500/10 font-bold"
-                        : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 border border-transparent"
-                    }`}
-                  >
-                    <span
-                      className={`text-[9px] px-1 py-0.2 rounded font-mono font-bold shrink-0 transition-colors ${
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setActiveTab(item.id);
+                      }}
+                      className={`w-full text-left flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer group ${
                         isActive
-                          ? "bg-cyan-500 text-slate-950 font-bold"
-                          : "bg-slate-900 border border-slate-800 text-slate-500 group-hover:text-slate-300"
+                          ? "bg-cyan-500/20 text-white border border-cyan-500/50 shadow-xs shadow-cyan-500/10 font-bold"
+                          : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 border border-transparent"
                       }`}
                     >
-                      {item.step}
-                    </span>
+                      <span
+                        className={`text-[9px] px-1 py-0.2 rounded font-mono font-bold shrink-0 transition-colors ${
+                          isActive
+                            ? "bg-cyan-500 text-slate-950 font-bold"
+                            : "bg-slate-900 border border-slate-800 text-slate-500 group-hover:text-slate-300"
+                        }`}
+                      >
+                        {item.step}
+                      </span>
 
-                    <Icon
-                      className={`w-3.5 h-3.5 shrink-0 transition-colors ${
-                        isActive ? "text-cyan-400" : "text-slate-500 group-hover:text-slate-300"
-                      }`}
-                    />
+                      <Icon
+                        className={`w-3.5 h-3.5 shrink-0 transition-colors ${
+                          isActive ? "text-cyan-400" : "text-slate-500 group-hover:text-slate-300"
+                        }`}
+                      />
 
-                    <span className="truncate text-[11px] flex-1 leading-tight">
-                      {item.label}
-                    </span>
+                      <span className="truncate text-[11px] flex-1 leading-tight">
+                        {item.label}
+                      </span>
 
-                    {isActive && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+                      {isActive && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center p-4 text-center text-slate-500 text-xs font-mono space-y-2">
+                <span>Stages list collapsed</span>
+                <button
+                  onClick={() => setIsStagesListExpanded(true)}
+                  className="px-2.5 py-1 text-[10px] rounded bg-slate-900 border border-slate-800 text-cyan-400 hover:bg-slate-800 cursor-pointer"
+                >
+                  Expand Stages
+                </button>
+              </div>
+            )}
 
             {/* Sidebar Bottom: Compact Active Vehicle Telemetry Card */}
             <div className="pt-2 border-t border-slate-800/90 shrink-0 space-y-1.5">
