@@ -6,4 +6,4 @@ Risk Score,0 - 100,40.9,38.9,41.4,Classical
 Mission Δv,km/s,10.846,10.696,10.796,Classical
 Flight Time,seconds,680,690,705,Classical
 Constraint Violations,count,0,0,0,Tied / Both 0
-Execution Time,milliseconds,0.0,0.24,55.03,Classical
+Execution Time,milliseconds,0.0,0.32,56.02,Classical

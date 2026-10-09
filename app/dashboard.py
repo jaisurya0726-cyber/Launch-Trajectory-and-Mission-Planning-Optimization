@@ -17,6 +17,8 @@ if BASE_DIR not in sys.path:
 
 from preprocessing.preprocess import load_missions, get_mission_by_id, ensure_dataset
 from simulation.trajectory_simulation import simulate_trajectory
+from simulation.reentry_simulation import run_reentry_simulation, TPS_MATERIALS, REENTRY_PRESETS
+from simulation.risk_assessment import assess_launch_window_risk
 from optimization.classical_optimizer import optimize_classical
 from optimization.qubo_model import build_qubo_matrix
 from optimization.qaoa_optimizer import run_qaoa_simulation
@@ -47,7 +49,7 @@ def run_streamlit_app():
     ensure_dataset()
     missions = load_missions()
 
-    # Sidebar Navigation: 8 Required Pages
+    # Sidebar Navigation
     pages = [
         "1. Mission Selection",
         "2. Mission Parameters",
@@ -56,7 +58,9 @@ def run_streamlit_app():
         "5. QUBO Formulation",
         "6. QAOA Quantum Optimization",
         "7. Classical vs Quantum Comparison",
-        "8. Final Mission Plan & Exports"
+        "8. Final Mission Plan & Exports",
+        "9. Atmospheric Re-entry & TPS",
+        "10. Launch Risk Assessment"
     ]
     selected_page = st.sidebar.radio("Navigation Console", pages)
 
@@ -320,6 +324,85 @@ def run_streamlit_app():
             "  - Runge-Kutta 4th-Order Integration for launch ascent dynamics.\n"
             "  - QUBO & QAOA quantum statevector evolution over 9 qubits ($2^9$ states)."
         )
+
+    # PAGE 9: ATMOSPHERIC RE-ENTRY & TPS ANALYSIS
+    elif selected_page.startswith("9."):
+        st.header("Page 9: Atmospheric Re-entry & Thermal Protection System (TPS)")
+        st.markdown(
+            "Hypersonic stagnation heat flux, terminal deceleration dynamics, and thermal soak through candidate heat shield materials."
+        )
+
+        col_cfg1, col_cfg2, col_cfg3 = st.columns(3)
+        with col_cfg1:
+            mat_keys = list(TPS_MATERIALS.keys())
+            chosen_mat = st.selectbox("Heat Shield Material", mat_keys, format_func=lambda k: TPS_MATERIALS[k]["name"])
+            tps_thick = st.slider("TPS Thickness (mm)", 15, 90, 45)
+        with col_cfg2:
+            v_entry = st.slider("Entry Velocity (km/s)", 3.5, 13.0, 7.75, step=0.1)
+            gamma_entry = st.slider("Flight Path Angle (°)", -7.5, -1.0, -1.75, step=0.05)
+        with col_cfg3:
+            v_mass = st.slider("Vehicle Mass (kg)", 500, 50000, int(mission.payload_mass + 5500), step=500)
+            rn_nose = st.slider("Nose Radius (m)", 0.3, 3.5, 1.8, step=0.1)
+
+        reentry_res = run_reentry_simulation(
+            entry_velocity_km_s=v_entry,
+            entry_flight_path_angle_deg=gamma_entry,
+            vehicle_mass_kg=float(v_mass),
+            nose_radius_m=rn_nose,
+            tps_thickness_mm=float(tps_thick),
+            material_id=chosen_mat
+        )
+        s = reentry_res["summary"]
+
+        k1, k2, k3, k4 = st.columns(4)
+        k1.metric("Peak Heat Flux", f"{s['peak_heat_flux_w_cm2']} W/cm²", f"@ T+{s['time_of_peak_heat_flux_s']}s")
+        k2.metric("Peak Deceleration", f"{s['peak_deceleration_g']} G", f"@ T+{s['time_of_peak_decel_s']}s")
+        k3.metric("Peak Surface Temp", f"{s['peak_surface_temp_c']} °C", f"Limit: {TPS_MATERIALS[chosen_mat]['max_service_temp_c']}°C")
+        k4.metric("Bondline Temp", f"{s['peak_bondline_temp_c']} °C", s["bondline_status"])
+
+        k5, k6, k7, k8 = st.columns(4)
+        k5.metric("Heat Load", f"{s['total_heat_load_kj_cm2']} kJ/cm²")
+        k6.metric("Ablation Recession", f"{s['total_ablation_mm']} mm")
+        k7.metric("Shield Mass", f"{s['heat_shield_mass_kg']} kg")
+        k8.metric("Blackout Duration", f"{s['blackout_duration_s']} s")
+
+    # PAGE 10: LAUNCH RISK ASSESSMENT
+    elif selected_page.startswith("10."):
+        st.header("Page 10: Launch Risk Assessment (NASA / ISRO LCC)")
+        st.markdown(
+            "Probabilistic launch commit criteria and atmospheric constraints evaluation."
+        )
+
+        w1, w2, w3 = st.columns(3)
+        with w1:
+            w_temp = st.slider("Ambient Temperature (°C)", -5.0, 45.0, 28.0)
+            w_wind = st.slider("Surface Wind Speed (m/s)", 0.0, 25.0, 8.5)
+        with w2:
+            w_rain = st.slider("Rain Intensity (mm/hr)", 0.0, 15.0, 0.0)
+            w_humid = st.slider("Relative Humidity (%)", 10, 100, 65)
+        with w3:
+            w_cloud = st.slider("Cloud Cover (%)", 0, 100, 35)
+            w_gust = st.slider("Gust Factor", 1.0, 1.6, 1.25)
+
+        risk_res = assess_launch_window_risk(
+            temperature_c=w_temp,
+            wind_speed_ms=w_wind,
+            rain_mm_hr=w_rain,
+            humidity_pct=float(w_humid),
+            gust_factor=w_gust,
+            cloud_cover_pct=float(w_cloud),
+            mission_risk_score=mission.risk_score
+        )
+
+        r1, r2, r3 = st.columns(3)
+        r1.metric("Composite Risk Score", f"{risk_res['composite_risk_pct']}%")
+        r2.metric("Go Probability", f"{risk_res['go_probability_pct']}%")
+        r3.metric("Commit Status", risk_res["safety_status"])
+
+        st.subheader("Launch Commit Criteria (LCC) Checklist")
+        for rule in risk_res["rules"]:
+            icon = "❌" if rule["is_violated"] else "✅"
+            st.markdown(f"{icon} **{rule['name']}**: {rule['current_value']} (Threshold: `{rule['threshold']}`) - Violation Risk: **{rule['probability']}%**")
 
 if __name__ == "__main__":
     run_streamlit_app()
