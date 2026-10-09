@@ -19,6 +19,7 @@ import {
   TrendingUp,
   ShieldCheck,
   ShieldAlert,
+  Flame,
   Menu,
   X,
   ChevronRight,
@@ -58,6 +59,7 @@ export const NAV_ITEMS = [
   "11. Quantum Fidelity",
   "12. Mission Input",
   "13. QEC Simulation",
+  "14. Atmospheric Re-entry",
 ];
 
 export const NAV_CONFIG = [
@@ -74,6 +76,7 @@ export const NAV_CONFIG = [
   { id: 10, step: "11", label: "Quantum Fidelity", shortLabel: "Fidelity", icon: ShieldCheck, description: "Eigenstate confidence" },
   { id: 11, step: "12", label: "Mission Input", shortLabel: "Input", icon: Sparkles, description: "Custom parameters & optimize" },
   { id: 12, step: "13", label: "QEC Simulation", shortLabel: "QEC Sim", icon: ShieldAlert, description: "Depolarizing noise & fault-tolerance" },
+  { id: 13, step: "14", label: "Atmospheric Re-entry", shortLabel: "Re-entry", icon: Flame, description: "Heat flux, TPS & deceleration profiles" },
 ];
 
 export const TopBar: React.FC<TopBarProps> = ({

@@ -1,14 +1,18 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Mission, TrajectoryData, ClassicalResult, QAOAResult } from "../types";
 import { simulateAscentTrajectory } from "../lib/physics";
 import { runClassicalOptimization, runQAOASimulation, buildQUBOMatrix } from "../lib/optimization";
-import { Download, FileText, CheckCircle2, ShieldAlert, Rocket, Database } from "lucide-react";
+import { generateMissionPDFReport } from "../lib/pdfReport";
+import { Download, FileText, CheckCircle2, ShieldAlert, Rocket, Database, Sparkles, Check } from "lucide-react";
 
 interface FinalPlanViewProps {
   mission: Mission;
 }
 
 export const FinalPlanView: React.FC<FinalPlanViewProps> = ({ mission }) => {
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState<boolean>(false);
+  const [hasDownloadedPDF, setHasDownloadedPDF] = useState<boolean>(false);
+
   const { traj, classical, qaoa, qubo } = useMemo(() => {
     const t = simulateAscentTrajectory(mission, 2.0);
     const c = runClassicalOptimization(mission);
@@ -95,6 +99,21 @@ export const FinalPlanView: React.FC<FinalPlanViewProps> = ({ mission }) => {
     downloadFile("qubo_matrix.csv", `${header}\n${matrixLines.join("\n")}`);
   };
 
+  const handleDownloadPDFReport = () => {
+    setIsGeneratingPDF(true);
+    setTimeout(() => {
+      try {
+        generateMissionPDFReport(mission, traj, classical, qaoa, qubo);
+        setHasDownloadedPDF(true);
+        setTimeout(() => setHasDownloadedPDF(false), 4000);
+      } catch (err) {
+        console.error("Failed to generate PDF mission report:", err);
+      } finally {
+        setIsGeneratingPDF(false);
+      }
+    }, 150);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header Banner */}
@@ -109,11 +128,34 @@ export const FinalPlanView: React.FC<FinalPlanViewProps> = ({ mission }) => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-emerald-950/60 border border-emerald-800 text-emerald-400 rounded-lg">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <span className="hidden sm:flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-emerald-950/60 border border-emerald-800 text-emerald-400 rounded-lg">
             <CheckCircle2 className="w-3.5 h-3.5" />
             Flight Solution Verified
           </span>
+          <button
+            onClick={handleDownloadPDFReport}
+            disabled={isGeneratingPDF}
+            className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 to-cyan-500 hover:from-cyan-300 hover:to-cyan-400 rounded-lg shadow-md shadow-cyan-500/20 transition-all cursor-pointer disabled:opacity-50"
+            title="Export complete 2-page academic mission results & RK4 trajectory summary as PDF"
+          >
+            {hasDownloadedPDF ? (
+              <>
+                <Check className="w-4 h-4 text-slate-950" />
+                <span>PDF Downloaded</span>
+              </>
+            ) : isGeneratingPDF ? (
+              <>
+                <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                <span>Generating PDF...</span>
+              </>
+            ) : (
+              <>
+                <FileText className="w-4 h-4 text-slate-950" />
+                <span>Download PDF Mission Report</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
 
@@ -184,21 +226,92 @@ export const FinalPlanView: React.FC<FinalPlanViewProps> = ({ mission }) => {
         </div>
       </div>
 
-      {/* 4 Downloadable Results Buttons */}
+      {/* Downloadable Results & PDF Mission Report */}
       <div className="p-5 rounded-xl bg-slate-900/60 border border-slate-800 space-y-4">
-        <div className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-          <Download className="w-4 h-4 text-cyan-400" />
-          <span>Downloadable Academic Artifacts (CSV Formats)</span>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+            <Download className="w-4 h-4 text-cyan-400" />
+            <span>Downloadable Flight Clearance Artifacts (PDF &amp; CSV Formats)</span>
+          </div>
+          <button
+            onClick={handleDownloadPDFReport}
+            disabled={isGeneratingPDF}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-950 bg-cyan-400 hover:bg-cyan-300 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+          >
+            <FileText className="w-3.5 h-3.5 text-slate-950" />
+            <span>{isGeneratingPDF ? "Generating PDF..." : "Export Full PDF Report"}</span>
+          </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+        {/* Featured PDF Mission Summary Banner */}
+        <div className="p-4 rounded-lg bg-gradient-to-r from-cyan-950/60 via-slate-950 to-indigo-950/40 border border-cyan-800/60 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-start gap-3 min-w-0">
+            <div className="p-2.5 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 shrink-0 mt-0.5">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-white text-sm">Official Flight Authorization &amp; Trajectory Summary Report</span>
+                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-950 border border-cyan-800 text-cyan-300 font-semibold">
+                  2-Page PDF
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
+                Includes Executive Flight Clearance, Baseline vs Classical vs 9-Qubit QAOA Benchmarks, RK4 Ascent Flight Dynamics Milestones, and Discrete Numerical Telemetry Time-Series Log.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={handleDownloadPDFReport}
+            disabled={isGeneratingPDF}
+            className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs rounded-lg shadow-sm transition-all cursor-pointer flex items-center gap-2 shrink-0 disabled:opacity-50"
+          >
+            {hasDownloadedPDF ? (
+              <>
+                <Check className="w-4 h-4" />
+                <span>Downloaded!</span>
+              </>
+            ) : isGeneratingPDF ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                <span>Generating...</span>
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4" />
+                <span>Download PDF Summary</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* 5 Downloadable Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
+          <button
+            onClick={handleDownloadPDFReport}
+            disabled={isGeneratingPDF}
+            className="p-3.5 bg-slate-950 hover:bg-slate-900 border border-cyan-800/80 hover:border-cyan-500 rounded-lg text-left transition-colors flex flex-col justify-between cursor-pointer space-y-2 ring-1 ring-cyan-500/20"
+          >
+            <div>
+              <div className="font-bold text-cyan-300 font-mono flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5" />
+                <span>flight_report.pdf</span>
+              </div>
+              <div className="text-slate-400 text-[11px] mt-1">2-page formal mission clearance &amp; RK4 telemetry</div>
+            </div>
+            <span className="text-cyan-400 font-semibold flex items-center gap-1 font-mono text-[11px]">
+              <Download className="w-3 h-3" /> Download PDF
+            </span>
+          </button>
+
           <button
             onClick={handleDownloadOptimizedMission}
             className="p-3.5 bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-cyan-600 rounded-lg text-left transition-colors flex flex-col justify-between cursor-pointer space-y-2"
           >
             <div>
               <div className="font-semibold text-slate-200 font-mono">optimized_mission.csv</div>
-              <div className="text-slate-500 text-[11px] mt-0.5">Final selected launch window, trajectory &amp; mode</div>
+              <div className="text-slate-500 text-[11px] mt-0.5">Final launch window, trajectory &amp; throttle mode</div>
             </div>
             <span className="text-cyan-400 font-semibold flex items-center gap-1 font-mono">
               <Download className="w-3 h-3" /> Download CSV

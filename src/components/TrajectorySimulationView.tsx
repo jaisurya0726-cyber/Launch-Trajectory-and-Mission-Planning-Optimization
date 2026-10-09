@@ -1,11 +1,14 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Mission, TrajectoryData } from "../types";
 import { simulateAscentTrajectory } from "../lib/physics";
 import { FlightPathCanvas, TrajectoryComparisonOverlay } from "./FlightPathCanvas";
+import { OrbitVisualizer3D } from "./OrbitVisualizer3D";
+import { RealtimeTelemetryVisualizer } from "./RealtimeTelemetryVisualizer";
 import { LiveTelemetryMonitor } from "./LiveTelemetryMonitor";
 import { SensitivityHeatmap } from "./SensitivityHeatmap";
 import { StabilityMap } from "./StabilityMap";
 import { CompareTrajectoriesToolbar } from "./CompareTrajectoriesToolbar";
+import { LaunchRiskAssessment } from "./LaunchRiskAssessment";
 import {
   ArrowRight,
   Activity,
@@ -19,12 +22,14 @@ import {
   ShieldCheck,
   ShieldAlert,
   GitCompare,
+  Globe,
 } from "lucide-react";
 
 interface TrajectorySimulationViewProps {
   mission: Mission;
   onProceedToClassical: () => void;
   onProceedToSensitivity?: () => void;
+  onProceedToReentry?: () => void;
 }
 
 const DEVIATION_PRESETS = [-5, -2.5, 0, 2.5, 5];
@@ -33,8 +38,8 @@ export const TrajectorySimulationView: React.FC<TrajectorySimulationViewProps> =
   mission,
   onProceedToClassical,
   onProceedToSensitivity,
+  onProceedToReentry,
 }) => {
-  const [selectedMetric, setSelectedMetric] = useState<"alt_vel" | "fuel_mass" | "accel_drag">("alt_vel");
   const [scrubberIdx, setScrubberIdx] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
@@ -44,7 +49,9 @@ export const TrajectorySimulationView: React.FC<TrajectorySimulationViewProps> =
   const [fuelDeltaPct, setFuelDeltaPct] = useState<number>(0);
   const [showStabilityEnvelope, setShowStabilityEnvelope] = useState<boolean>(true);
   const [showStabilityMap, setShowStabilityMap] = useState<boolean>(true);
+  const [showRiskAssessment, setShowRiskAssessment] = useState<boolean>(true);
   const [comparisonOverlay, setComparisonOverlay] = useState<TrajectoryComparisonOverlay | null>(null);
+  const [visualizationMode, setVisualizationMode] = useState<"3d" | "2d" | "both">("3d");
 
   // Active mission with optional fuel mass scaling
   const activeMission: Mission = useMemo(() => {
@@ -85,6 +92,23 @@ export const TrajectorySimulationView: React.FC<TrajectorySimulationViewProps> =
 
   const nPoints = trajData.time.length;
   const currentIdx = Math.min(scrubberIdx, nPoints - 1);
+
+  // Synchronized real-time playback ticker across all visualizers
+  useEffect(() => {
+    if (!isPlaying) return;
+    const interval = setInterval(() => {
+      setScrubberIdx((prev) => {
+        const next = prev + 1;
+        if (next >= nPoints) {
+          setIsPlaying(false);
+          return nPoints - 1;
+        }
+        return next;
+      });
+    }, Math.max(16, Math.round(90 / playbackSpeed)));
+
+    return () => clearInterval(interval);
+  }, [isPlaying, playbackSpeed, nPoints]);
 
   // Global max altitude across envelope and active deviation for proper scaling
   const maxEnvelopeAlt = useMemo(() => {
@@ -161,6 +185,20 @@ export const TrajectorySimulationView: React.FC<TrajectorySimulationViewProps> =
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
+          {/* LAUNCH RISK ASSESSMENT TOGGLE BUTTON */}
+          <button
+            onClick={() => setShowRiskAssessment(!showRiskAssessment)}
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+              showRiskAssessment
+                ? "bg-cyan-950 text-cyan-300 border-cyan-700 shadow-sm shadow-cyan-500/20"
+                : "bg-slate-950 text-slate-400 border-slate-800 hover:text-white"
+            }`}
+            title="Toggle Probabilistic Launch Risk Assessment Widget"
+          >
+            <ShieldAlert className={`w-3.5 h-3.5 ${showRiskAssessment ? "text-cyan-400" : "text-slate-400"}`} />
+            <span>Risk Assessment: {showRiskAssessment ? "ON" : "OFF"}</span>
+          </button>
+
           {/* STABILITY MAP TOGGLE BUTTON */}
           <button
             onClick={() => setShowStabilityMap(!showStabilityMap)}
@@ -191,6 +229,17 @@ export const TrajectorySimulationView: React.FC<TrajectorySimulationViewProps> =
               title="Open D3 Trajectory Parameter Sensitivity Analysis"
             >
               <span>Sensitivity Analysis</span>
+            </button>
+          )}
+
+          {onProceedToReentry && (
+            <button
+              onClick={onProceedToReentry}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-orange-950/60 border border-orange-700/80 text-orange-300 hover:bg-orange-900/80 transition-colors cursor-pointer"
+              title="Open Atmospheric Re-entry Aerothermal Analysis"
+            >
+              <Flame className="w-3.5 h-3.5 text-orange-400" />
+              <span>Atmospheric Re-entry</span>
             </button>
           )}
 
@@ -241,20 +290,86 @@ export const TrajectorySimulationView: React.FC<TrajectorySimulationViewProps> =
         </div>
       </div>
 
-      {/* CANVAS FLIGHT PATH ANIMATION */}
-      <FlightPathCanvas
-        mission={mission}
-        trajectory={trajData}
-        currentIndex={currentIdx}
-        onIndexChange={(idx) => setScrubberIdx(idx)}
-        isPlaying={isPlaying}
-        onTogglePlay={() => setIsPlaying(!isPlaying)}
-        playbackSpeed={playbackSpeed}
-        onChangeSpeed={(spd) => setPlaybackSpeed(spd)}
-        envelopeTrajectories={envelopeTrajectories}
-        showEnvelope={showStabilityEnvelope}
-        comparisonOverlay={comparisonOverlay || undefined}
-      />
+      {/* TRAJECTORY & ORBIT RENDERING MODE SELECTOR */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 rounded-lg bg-cyan-950 border border-cyan-800 text-cyan-400">
+            <Globe className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-xs font-bold text-white tracking-tight">Mission Trajectory &amp; Orbit Rendering Engine</div>
+            <div className="text-[10px] text-slate-400 font-mono">
+              Switch between 3D Spatial Orbital Physics (Three.js WebGL) and 2D RK4 Flight Profile Canvas
+            </div>
+          </div>
+        </div>
+
+        {/* Segmented Mode Selector */}
+        <div className="flex items-center gap-1 p-1 bg-slate-950 rounded-lg border border-slate-800">
+          <button
+            onClick={() => setVisualizationMode("3d")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono rounded-md transition-all cursor-pointer ${
+              visualizationMode === "3d"
+                ? "bg-cyan-500 text-slate-950 font-bold shadow-xs"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            <Globe className="w-3.5 h-3.5" />
+            <span>3D Orbit &amp; Trajectory</span>
+          </button>
+          <button
+            onClick={() => setVisualizationMode("2d")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono rounded-md transition-all cursor-pointer ${
+              visualizationMode === "2d"
+                ? "bg-cyan-500 text-slate-950 font-bold shadow-xs"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            <Activity className="w-3.5 h-3.5" />
+            <span>2D Ascent Profile</span>
+          </button>
+          <button
+            onClick={() => setVisualizationMode("both")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono rounded-md transition-all cursor-pointer ${
+              visualizationMode === "both"
+                ? "bg-cyan-500 text-slate-950 font-bold shadow-xs"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span>Split View (3D + 2D)</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 3D ORBIT & ASCENT TRAJECTORY VISUALIZER (Three.js WebGL) */}
+      {(visualizationMode === "3d" || visualizationMode === "both") && (
+        <OrbitVisualizer3D
+          mission={mission}
+          trajectory={trajData}
+          currentIndex={currentIdx}
+          onIndexChange={(idx) => setScrubberIdx(idx)}
+          isPlaying={isPlaying}
+          onTogglePlay={() => setIsPlaying(!isPlaying)}
+        />
+      )}
+
+      {/* 2D CANVAS FLIGHT PATH ANIMATION */}
+      {(visualizationMode === "2d" || visualizationMode === "both") && (
+        <FlightPathCanvas
+          mission={mission}
+          trajectory={trajData}
+          currentIndex={currentIdx}
+          onIndexChange={(idx) => setScrubberIdx(idx)}
+          isPlaying={isPlaying}
+          onTogglePlay={() => setIsPlaying(!isPlaying)}
+          playbackSpeed={playbackSpeed}
+          onChangeSpeed={(spd) => setPlaybackSpeed(spd)}
+          envelopeTrajectories={envelopeTrajectories}
+          showEnvelope={showStabilityEnvelope}
+          comparisonOverlay={comparisonOverlay || undefined}
+        />
+      )}
 
       {/* COMPARE TRAJECTORIES OVERLAY TOOLBAR */}
       <CompareTrajectoriesToolbar
@@ -605,6 +720,11 @@ export const TrajectorySimulationView: React.FC<TrajectorySimulationViewProps> =
         </div>
       </div>
 
+      {/* PROBABILISTIC LAUNCH RISK ASSESSMENT WIDGET */}
+      {showRiskAssessment && (
+        <LaunchRiskAssessment mission={mission} />
+      )}
+
       {/* WEATHER-CONSTRAINED LAUNCH PARAMETER STABILITY MAP */}
       {showStabilityMap && (
         <StabilityMap
@@ -624,218 +744,17 @@ export const TrajectorySimulationView: React.FC<TrajectorySimulationViewProps> =
         }}
       />
 
-      {/* Standard Telemetry View & Interactive Scrubber */}
-      <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 p-1 bg-slate-950 rounded-lg border border-slate-800">
-            <button
-              onClick={() => setSelectedMetric("alt_vel")}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                selectedMetric === "alt_vel" ? "bg-cyan-500 text-slate-950 font-semibold" : "text-slate-400 hover:text-white"
-              }`}
-            >
-              Altitude &amp; Velocity
-            </button>
-            <button
-              onClick={() => setSelectedMetric("fuel_mass")}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                selectedMetric === "fuel_mass" ? "bg-cyan-500 text-slate-950 font-semibold" : "text-slate-400 hover:text-white"
-              }`}
-            >
-              Mass &amp; Propellant Depletion
-            </button>
-            <button
-              onClick={() => setSelectedMetric("accel_drag")}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                selectedMetric === "accel_drag" ? "bg-cyan-500 text-slate-950 font-semibold" : "text-slate-400 hover:text-white"
-              }`}
-            >
-              Acceleration &amp; Aerodynamic Drag
-            </button>
-          </div>
-
-          <div className="flex items-center gap-3 text-xs font-mono text-slate-400">
-            <span>T+ {trajData.time[currentIdx]} s</span>
-            <span>·</span>
-            <span>Alt: {trajData.altitude_km[currentIdx]} km</span>
-            <span>·</span>
-            <span>Vel: {trajData.velocity_ms[currentIdx]} m/s</span>
-            <span>·</span>
-            <span>Accel: {trajData.accel_g[currentIdx]} g</span>
-          </div>
-        </div>
-
-        {/* SVG Time-Series Chart */}
-        <div className="h-64 w-full bg-slate-950/80 rounded-lg border border-slate-800/80 p-2 relative flex flex-col justify-end">
-          <svg className="w-full h-full overflow-visible" viewBox="0 0 1000 200" preserveAspectRatio="none">
-            {/* Grid Lines */}
-            <line x1="0" y1="50" x2="1000" y2="50" stroke="#1e293b" strokeDasharray="4 4" />
-            <line x1="0" y1="100" x2="1000" y2="100" stroke="#1e293b" strokeDasharray="4 4" />
-            <line x1="0" y1="150" x2="1000" y2="150" stroke="#1e293b" strokeDasharray="4 4" />
-
-            {selectedMetric === "alt_vel" && (
-              <>
-                {/* Altitude Curve (Cyan) */}
-                <path
-                  d={trajData.altitude_km
-                    .map((val, idx) => {
-                      const x = (idx / (nPoints - 1)) * 1000;
-                      const maxA = trajData.summary.max_altitude_km || 1;
-                      const y = 190 - (val / maxA) * 170;
-                      return `${idx === 0 ? "M" : "L"} ${x} ${y}`;
-                    })
-                    .join(" ")}
-                  fill="none"
-                  stroke="#06b6d4"
-                  strokeWidth="2.5"
-                />
-                {/* Velocity Curve (Yellow/Amber) */}
-                <path
-                  d={trajData.velocity_ms
-                    .map((val, idx) => {
-                      const x = (idx / (nPoints - 1)) * 1000;
-                      const maxV = trajData.summary.final_velocity_ms || 1;
-                      const y = 190 - (val / maxV) * 170;
-                      return `${idx === 0 ? "M" : "L"} ${x} ${y}`;
-                    })
-                    .join(" ")}
-                  fill="none"
-                  stroke="#f59e0b"
-                  strokeWidth="2"
-                  strokeDasharray="5 3"
-                />
-              </>
-            )}
-
-            {selectedMetric === "fuel_mass" && (
-              <>
-                {/* Fuel Remaining Curve (Blue) */}
-                <path
-                  d={trajData.fuel_remaining_kg
-                    .map((val, idx) => {
-                      const x = (idx / (nPoints - 1)) * 1000;
-                      const maxF = trajData.fuel_remaining_kg[0] || 1;
-                      const y = 190 - (val / maxF) * 170;
-                      return `${idx === 0 ? "M" : "L"} ${x} ${y}`;
-                    })
-                    .join(" ")}
-                  fill="none"
-                  stroke="#3b82f6"
-                  strokeWidth="2.5"
-                />
-                {/* Total Mass Curve (Purple) */}
-                <path
-                  d={trajData.mass_kg
-                    .map((val, idx) => {
-                      const x = (idx / (nPoints - 1)) * 1000;
-                      const maxM = trajData.mass_kg[0] || 1;
-                      const y = 190 - (val / maxM) * 170;
-                      return `${idx === 0 ? "M" : "L"} ${x} ${y}`;
-                    })
-                    .join(" ")}
-                  fill="none"
-                  stroke="#a855f7"
-                  strokeWidth="2"
-                />
-              </>
-            )}
-
-            {selectedMetric === "accel_drag" && (
-              <>
-                {/* Acceleration G-load (Rose) */}
-                <path
-                  d={trajData.accel_g
-                    .map((val, idx) => {
-                      const x = (idx / (nPoints - 1)) * 1000;
-                      const maxG = trajData.summary.max_acceleration_g || 1;
-                      const y = 190 - (val / maxG) * 170;
-                      return `${idx === 0 ? "M" : "L"} ${x} ${y}`;
-                    })
-                    .join(" ")}
-                  fill="none"
-                  stroke="#f43f5e"
-                  strokeWidth="2.5"
-                />
-                {/* Drag Force (Emerald) */}
-                <path
-                  d={trajData.drag_kN
-                    .map((val, idx) => {
-                      const x = (idx / (nPoints - 1)) * 1000;
-                      const maxD = Math.max(...trajData.drag_kN, 1);
-                      const y = 190 - (val / maxD) * 170;
-                      return `${idx === 0 ? "M" : "L"} ${x} ${y}`;
-                    })
-                    .join(" ")}
-                  fill="none"
-                  stroke="#10b981"
-                  strokeWidth="2"
-                />
-              </>
-            )}
-
-            {/* Scrubber vertical line */}
-            <line
-              x1={(currentIdx / (nPoints - 1)) * 1000}
-              y1="0"
-              x2={(currentIdx / (nPoints - 1)) * 1000}
-              y2="200"
-              stroke="#ffffff"
-              strokeWidth="1.5"
-            />
-          </svg>
-
-          {/* Legend */}
-          <div className="absolute top-3 left-4 flex items-center gap-4 text-xs font-mono">
-            {selectedMetric === "alt_vel" && (
-              <>
-                <span className="flex items-center gap-1.5 text-cyan-400">
-                  <span className="w-2.5 h-2.5 bg-cyan-400 rounded-sm" /> Altitude (km)
-                </span>
-                <span className="flex items-center gap-1.5 text-amber-400">
-                  <span className="w-2.5 h-2.5 bg-amber-400 rounded-sm" /> Velocity (m/s)
-                </span>
-              </>
-            )}
-            {selectedMetric === "fuel_mass" && (
-              <>
-                <span className="flex items-center gap-1.5 text-blue-400">
-                  <span className="w-2.5 h-2.5 bg-blue-400 rounded-sm" /> Fuel Remaining (kg)
-                </span>
-                <span className="flex items-center gap-1.5 text-purple-400">
-                  <span className="w-2.5 h-2.5 bg-purple-400 rounded-sm" /> Vehicle Mass (kg)
-                </span>
-              </>
-            )}
-            {selectedMetric === "accel_drag" && (
-              <>
-                <span className="flex items-center gap-1.5 text-rose-400">
-                  <span className="w-2.5 h-2.5 bg-rose-400 rounded-sm" /> Acceleration (g)
-                </span>
-                <span className="flex items-center gap-1.5 text-emerald-400">
-                  <span className="w-2.5 h-2.5 bg-emerald-400 rounded-sm" /> Aerodynamic Drag (kN)
-                </span>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Timeline Slider */}
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs text-slate-400 font-mono">
-            <span>Liftoff T+0s</span>
-            <span>Flight Elapsed Time Scrubber: T+{trajData.time[currentIdx]}s</span>
-            <span>Burnout T+{trajData.time[nPoints - 1]}s</span>
-          </div>
-          <input
-            type="range"
-            min={0}
-            max={nPoints - 1}
-            value={currentIdx}
-            onChange={(e) => setScrubberIdx(Number(e.target.value))}
-            className="w-full accent-cyan-400 bg-slate-800 h-1.5 rounded-lg cursor-pointer"
-          />
-        </div>
-      </div>
+      {/* REAL-TIME ASCENT TELEMETRY VISUALIZATION (RECHARTS ENGINE) */}
+      <RealtimeTelemetryVisualizer
+        mission={mission}
+        trajectory={trajData}
+        currentIndex={currentIdx}
+        onIndexChange={(idx) => setScrubberIdx(idx)}
+        isPlaying={isPlaying}
+        onTogglePlay={() => setIsPlaying(!isPlaying)}
+        playbackSpeed={playbackSpeed}
+        onChangeSpeed={(spd) => setPlaybackSpeed(spd)}
+      />
 
       {/* REAL-TIME VEHICLE TELEMETRY MONITOR SIMULATION */}
       <LiveTelemetryMonitor

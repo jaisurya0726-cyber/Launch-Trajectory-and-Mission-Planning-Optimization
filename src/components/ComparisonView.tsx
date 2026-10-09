@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Mission, ComparisonRow, HistoryEntry } from "../types";
 import { runClassicalOptimization, runQAOASimulation } from "../lib/optimization";
 import { MultiIterationHistoricalOverlay } from "./MultiIterationHistoricalOverlay";
+import { SideBySideIterationComparison } from "./SideBySideIterationComparison";
 import {
   ArrowRight,
   Scale,
@@ -12,6 +13,7 @@ import {
   TableProperties,
   LayoutGrid,
   BookOpen,
+  GitCompare,
 } from "lucide-react";
 
 interface ComparisonViewProps {
@@ -24,7 +26,7 @@ interface ComparisonViewProps {
   onSaveCurrentToHistory?: (mission: Mission) => void;
 }
 
-export type ComparisonSubTab = "overlay" | "academic" | "combined";
+export type ComparisonSubTab = "side_by_side" | "overlay" | "academic" | "combined";
 
 export const ComparisonView: React.FC<ComparisonViewProps> = ({
   mission,
@@ -35,7 +37,7 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({
   onSelectMission,
   onSaveCurrentToHistory,
 }) => {
-  const [activeSubTab, setActiveSubTab] = useState<ComparisonSubTab>("overlay");
+  const [activeSubTab, setActiveSubTab] = useState<ComparisonSubTab>("side_by_side");
 
   const { classicalRes, qaoaRes, rows } = useMemo(() => {
     const cRes = runClassicalOptimization(mission);
@@ -153,7 +155,19 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({
 
       {/* Sub-view Navigation Switcher */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-1.5 bg-slate-950/80 rounded-xl border border-slate-800">
-        <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-1">
+          <button
+            onClick={() => setActiveSubTab("side_by_side")}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
+              activeSubTab === "side_by_side"
+                ? "bg-cyan-500 text-slate-950 font-bold shadow-xs shadow-cyan-500/30"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            <GitCompare className="w-3.5 h-3.5" />
+            <span>Side-by-Side Dual Iteration Comparison</span>
+          </button>
+
           <button
             onClick={() => setActiveSubTab("overlay")}
             className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
@@ -163,7 +177,7 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
-            <span>Multi-Iteration Logbook Overlay (Single Chart)</span>
+            <span>Multi-Iteration Logbook Overlay</span>
           </button>
 
           <button
@@ -197,6 +211,16 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({
       </div>
 
       {/* Render Sub-View Content */}
+
+      {/* SUB-VIEW 0: Side-by-Side Dual Iteration Comparison */}
+      {(activeSubTab === "side_by_side" || activeSubTab === "combined") && (
+        <SideBySideIterationComparison
+          activeMission={mission}
+          history={history}
+          allMissions={allMissions}
+          onSelectMission={onSelectMission}
+        />
+      )}
 
       {/* SUB-VIEW 1: Multi-Iteration Historical Overlay (Single Chart) */}
       {(activeSubTab === "overlay" || activeSubTab === "combined") && (

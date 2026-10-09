@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Mission } from "../types";
 import { G0 } from "../lib/physics";
 import { Gauge, CloudRain, Wind, Thermometer, ShieldAlert, ArrowRight, Sliders, RefreshCw, Zap } from "lucide-react";
+import { LaunchRiskAssessment } from "./LaunchRiskAssessment";
 
 interface MissionParametersProps {
   mission: Mission;
@@ -412,6 +413,9 @@ export const MissionParameters: React.FC<MissionParametersProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Probabilistic Launch Risk Assessment Widget */}
+      <LaunchRiskAssessment mission={mission} />
 
       {/* Transparent Risk Formula Card */}
       <div className="p-5 rounded-xl bg-slate-900/60 border border-slate-800 space-y-3">

@@ -21,6 +21,7 @@ import { SensitivityAnalysisView } from "./components/SensitivityAnalysisView";
 import { QuantumFidelityView } from "./components/QuantumFidelityView";
 import { MissionInputView } from "./components/MissionInputView";
 import { QuantumErrorCorrectionView } from "./components/QuantumErrorCorrectionView";
+import { AtmosphericReentryView } from "./components/AtmosphericReentryView";
 import { MissionHistoryModal } from "./components/MissionHistoryModal";
 import { MissionLogbookSidebar } from "./components/MissionLogbookSidebar";
 import { runClassicalOptimization, runQAOASimulation } from "./lib/optimization";
@@ -193,6 +194,7 @@ function MainApp() {
             mission={selectedMission}
             onProceedToClassical={() => setActiveTab(3)}
             onProceedToSensitivity={() => setActiveTab(9)}
+            onProceedToReentry={() => setActiveTab(13)}
           />
         )}
 
@@ -310,6 +312,18 @@ function MainApp() {
             onProceedToComparison={() => {
               persistCurrentRun(selectedMission);
               setActiveTab(6);
+            }}
+          />
+        )}
+
+        {/* Tab 14: Atmospheric Re-entry Analysis */}
+        {activeTab === 13 && (
+          <AtmosphericReentryView
+            mission={selectedMission}
+            onProceedToAscent={() => setActiveTab(2)}
+            onProceedToPlan={() => {
+              persistCurrentRun(selectedMission);
+              setActiveTab(7);
             }}
           />
         )}
