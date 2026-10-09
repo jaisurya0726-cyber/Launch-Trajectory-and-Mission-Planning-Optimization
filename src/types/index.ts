@@ -309,3 +309,32 @@ export interface ConstraintCheckResult {
   margin: string;
 }
 
+export type QECCodeType =
+  | "unprotected"
+  | "repetition_3"
+  | "perfect_5"
+  | "steane_7"
+  | "shor_9"
+  | "surface_17_d3"
+  | "surface_49_d5"
+  | "zne_mitigated";
+
+export type QECPreset =
+  | "ideal"
+  | "trapped_ion"
+  | "superconducting_ft"
+  | "nisq_baseline"
+  | "threshold_crossing"
+  | "high_noise"
+  | "custom";
+
+export interface QECSimulationParameters {
+  depolarizingNoiseRate: number; // p_depol (e.g. 0.005 = 0.5%)
+  twoQubitGateError: number;     // p_2q (e.g. 0.008 = 0.8%)
+  singleQubitGateError: number;   // p_1q (e.g. 0.001 = 0.1%)
+  readoutError: number;          // p_meas (e.g. 0.015 = 1.5%)
+  layersP: number;               // QAOA depth (1 to 5)
+  codeType: QECCodeType;
+  shots: number;
+}
+

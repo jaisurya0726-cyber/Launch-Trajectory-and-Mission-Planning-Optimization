@@ -18,6 +18,7 @@ import {
   BarChart3,
   TrendingUp,
   ShieldCheck,
+  ShieldAlert,
   Menu,
   X,
   ChevronRight,
@@ -56,6 +57,7 @@ export const NAV_ITEMS = [
   "10. Sensitivity",
   "11. Quantum Fidelity",
   "12. Mission Input",
+  "13. QEC Simulation",
 ];
 
 export const NAV_CONFIG = [
@@ -71,6 +73,7 @@ export const NAV_CONFIG = [
   { id: 9, step: "10", label: "Sensitivity Analysis", shortLabel: "Sensitivity", icon: TrendingUp, description: "D3 dispersion scatter" },
   { id: 10, step: "11", label: "Quantum Fidelity", shortLabel: "Fidelity", icon: ShieldCheck, description: "Eigenstate confidence" },
   { id: 11, step: "12", label: "Mission Input", shortLabel: "Input", icon: Sparkles, description: "Custom parameters & optimize" },
+  { id: 12, step: "13", label: "QEC Simulation", shortLabel: "QEC Sim", icon: ShieldAlert, description: "Depolarizing noise & fault-tolerance" },
 ];
 
 export const TopBar: React.FC<TopBarProps> = ({

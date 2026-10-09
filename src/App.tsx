@@ -20,6 +20,7 @@ import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
 import { SensitivityAnalysisView } from "./components/SensitivityAnalysisView";
 import { QuantumFidelityView } from "./components/QuantumFidelityView";
 import { MissionInputView } from "./components/MissionInputView";
+import { QuantumErrorCorrectionView } from "./components/QuantumErrorCorrectionView";
 import { MissionHistoryModal } from "./components/MissionHistoryModal";
 import { MissionLogbookSidebar } from "./components/MissionLogbookSidebar";
 import { runClassicalOptimization, runQAOASimulation } from "./lib/optimization";
@@ -223,6 +224,10 @@ function MainApp() {
               persistCurrentRun(selectedMission);
               setActiveTab(10);
             }}
+            onProceedToQEC={() => {
+              persistCurrentRun(selectedMission);
+              setActiveTab(12);
+            }}
           />
         )}
 
@@ -273,6 +278,7 @@ function MainApp() {
               setActiveTab(6);
             }}
             onProceedToQAOA={() => setActiveTab(5)}
+            onProceedToQEC={() => setActiveTab(12)}
           />
         )}
 
@@ -291,6 +297,19 @@ function MainApp() {
             onProceedToPlan={() => {
               persistCurrentRun(selectedMission);
               setActiveTab(7);
+            }}
+          />
+        )}
+
+        {/* Tab 13: Quantum Error Correction Simulation */}
+        {activeTab === 12 && (
+          <QuantumErrorCorrectionView
+            mission={selectedMission}
+            onProceedToQAOA={() => setActiveTab(5)}
+            onProceedToFidelity={() => setActiveTab(10)}
+            onProceedToComparison={() => {
+              persistCurrentRun(selectedMission);
+              setActiveTab(6);
             }}
           />
         )}

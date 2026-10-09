@@ -28,6 +28,7 @@ import {
 } from "recharts";
 import {
   ShieldCheck,
+  ShieldAlert,
   Atom,
   Sparkles,
   BarChart3,
@@ -54,6 +55,7 @@ interface QuantumFidelityViewProps {
   mission: Mission;
   onProceedToComparison?: () => void;
   onProceedToQAOA?: () => void;
+  onProceedToQEC?: () => void;
 }
 
 export type DistributionViewMode = "top_eigenstates" | "full_spectrum" | "cumulative_cdf" | "subspace_partition";
@@ -62,6 +64,7 @@ export const QuantumFidelityView: React.FC<QuantumFidelityViewProps> = ({
   mission,
   onProceedToComparison,
   onProceedToQAOA,
+  onProceedToQEC,
 }) => {
   // Quantum Circuit Hyperparameters
   const [layersP, setLayersP] = useState<number>(1);
@@ -201,6 +204,16 @@ export const QuantumFidelityView: React.FC<QuantumFidelityViewProps> = ({
               >
                 <Atom className="w-3.5 h-3.5 text-cyan-400" />
                 <span>QAOA Circuit View</span>
+              </button>
+            )}
+
+            {onProceedToQEC && (
+              <button
+                onClick={onProceedToQEC}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-slate-300 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-lg transition-colors cursor-pointer"
+              >
+                <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
+                <span>QEC Noise Sim</span>
               </button>
             )}
 

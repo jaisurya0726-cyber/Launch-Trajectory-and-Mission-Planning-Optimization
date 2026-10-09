@@ -36,12 +36,14 @@ interface QAOAViewProps {
   mission: Mission;
   onProceedToComparison: () => void;
   onProceedToFidelity?: () => void;
+  onProceedToQEC?: () => void;
 }
 
 export const QAOAView: React.FC<QAOAViewProps> = ({
   mission,
   onProceedToComparison,
   onProceedToFidelity,
+  onProceedToQEC,
 }) => {
   const [layersP, setLayersP] = useState<number>(1);
   const [shots, setShots] = useState<number>(1024);
@@ -91,6 +93,16 @@ export const QAOAView: React.FC<QAOAViewProps> = ({
             >
               <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
               <span>Analyze Quantum Fidelity</span>
+            </button>
+          )}
+
+          {onProceedToQEC && (
+            <button
+              onClick={onProceedToQEC}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-mono font-semibold text-rose-300 bg-rose-950/70 hover:bg-rose-900/70 border border-rose-800/80 rounded-lg transition-colors cursor-pointer"
+            >
+              <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
+              <span>QEC &amp; Noise Sim</span>
             </button>
           )}
 
