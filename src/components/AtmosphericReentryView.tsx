@@ -286,7 +286,7 @@ export const AtmosphericReentryView: React.FC<AtmosphericReentryViewProps> = ({
                     Atmospheric Re-entry & Aerothermal Analysis
                   </h1>
                   <span className="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-orange-950 border border-orange-800 text-orange-300">
-                    Sutton-Graves Formulation
+                    Stage 14 / Page 14 — Sutton-Graves Formulation
                   </span>
                   <span className="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-cyan-950 border border-cyan-800 text-cyan-300">
                     Terminal Descent Dynamics

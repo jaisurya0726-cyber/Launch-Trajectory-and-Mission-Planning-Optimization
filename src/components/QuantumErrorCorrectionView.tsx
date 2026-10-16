@@ -467,7 +467,7 @@ export const QuantumErrorCorrectionView: React.FC<QuantumErrorCorrectionViewProp
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded text-[11px] font-mono uppercase bg-cyan-950 text-cyan-300 border border-cyan-800 font-semibold flex items-center gap-1">
                 <ShieldAlert className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Quantum Fault Tolerance</span>
+                <span>Stage 13 / Page 13 — Quantum Fault Tolerance</span>
               </span>
               <span className="px-2 py-0.5 rounded text-[11px] font-mono uppercase bg-slate-800 text-slate-300 border border-slate-700">
                 Mission: {mission.mission_id}

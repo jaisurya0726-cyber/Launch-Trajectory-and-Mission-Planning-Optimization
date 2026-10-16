@@ -63,20 +63,20 @@ export const NAV_ITEMS = [
 ];
 
 export const NAV_CONFIG = [
-  { id: 0, step: "01", label: "Mission Selection", shortLabel: "Selection", icon: Rocket, description: "Payload & target orbit" },
-  { id: 1, step: "02", label: "Parameters", shortLabel: "Parameters", icon: Sliders, description: "Propulsion & staging" },
-  { id: 2, step: "03", label: "Ascent Trajectory", shortLabel: "Trajectory", icon: Activity, description: "Runge-Kutta simulation" },
-  { id: 3, step: "04", label: "Classical Optimizer", shortLabel: "Classical", icon: Cpu, description: "Simulated annealing" },
-  { id: 4, step: "05", label: "QUBO Formulation", shortLabel: "QUBO", icon: Grid, description: "Ising Hamiltonian mapping" },
-  { id: 5, step: "06", label: "QAOA Circuit", shortLabel: "QAOA", icon: Atom, description: "Quantum statevector" },
-  { id: 6, step: "07", label: "Benchmark", shortLabel: "Comparison", icon: GitCompare, description: "Classical vs Quantum" },
-  { id: 7, step: "08", label: "Mission Plan", shortLabel: "Plan & Export", icon: CheckCircle2, description: "Flight burn profile & CSV" },
-  { id: 8, step: "09", label: "Analytics Dashboard", shortLabel: "Analytics", icon: BarChart3, description: "Historical telemetry" },
-  { id: 9, step: "10", label: "Sensitivity Analysis", shortLabel: "Sensitivity", icon: TrendingUp, description: "D3 dispersion scatter" },
-  { id: 10, step: "11", label: "Quantum Fidelity", shortLabel: "Fidelity", icon: ShieldCheck, description: "Eigenstate confidence" },
-  { id: 11, step: "12", label: "Mission Input", shortLabel: "Input", icon: Sparkles, description: "Custom parameters & optimize" },
-  { id: 12, step: "13", label: "QEC Simulation", shortLabel: "QEC Sim", icon: ShieldAlert, description: "Depolarizing noise & fault-tolerance" },
-  { id: 13, step: "14", label: "Atmospheric Re-entry", shortLabel: "Re-entry", icon: Flame, description: "Heat flux, TPS & deceleration profiles" },
+  { id: 0, step: "01", label: "Mission Selection", shortLabel: "Selection", icon: Rocket, description: "Payload mass & target orbit catalog" },
+  { id: 1, step: "02", label: "Parameters", shortLabel: "Parameters", icon: Sliders, description: "Propulsion specs & dynamic payload sensitivity" },
+  { id: 2, step: "03", label: "Ascent Trajectory", shortLabel: "Trajectory", icon: Activity, description: "4th-Order Runge-Kutta 3D flight dynamics" },
+  { id: 3, step: "04", label: "Classical Optimizer", shortLabel: "Classical", icon: Cpu, description: "Multi-objective simulated annealing" },
+  { id: 4, step: "05", label: "QUBO Formulation", shortLabel: "QUBO", icon: Grid, description: "9-Qubit Ising Hamiltonian cost matrix" },
+  { id: 5, step: "06", label: "QAOA Circuit", shortLabel: "QAOA", icon: Atom, description: "QAOA statevector quantum circuit simulation" },
+  { id: 6, step: "07", label: "Benchmark", shortLabel: "Comparison", icon: GitCompare, description: "Classical vs Quantum benchmark & Pareto fronts" },
+  { id: 7, step: "08", label: "Mission Plan", shortLabel: "Plan & Export", icon: CheckCircle2, description: "Flight burn timeline, CSV & PDF export" },
+  { id: 8, step: "09", label: "Analytics Dashboard", shortLabel: "Analytics", icon: BarChart3, description: "Cost-per-kg scaling & iteration trends" },
+  { id: 9, step: "10", label: "Sensitivity Analysis", shortLabel: "Sensitivity", icon: TrendingUp, description: "D3.js dispersion sweeps & Monte Carlo" },
+  { id: 10, step: "11", label: "Quantum Fidelity", shortLabel: "Fidelity", icon: ShieldCheck, description: "Quantum statevector fidelity & confidence" },
+  { id: 11, step: "12", label: "Mission Input", shortLabel: "Input", icon: Sparkles, description: "Custom vehicle parameters & on-demand solver" },
+  { id: 12, step: "13", label: "QEC Simulation", shortLabel: "QEC Sim", icon: ShieldAlert, description: "Fault-tolerant Surface & Steane code noise simulation" },
+  { id: 13, step: "14", label: "Atmospheric Re-entry", shortLabel: "Re-entry", icon: Flame, description: "Hypersonic heat flux & deceleration profiles" },
 ];
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -177,13 +177,18 @@ export const TopBar: React.FC<TopBarProps> = ({
               </div>
             </button>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/70 border border-cyan-800/60 text-cyan-300 font-semibold whitespace-nowrap">
                 STAGE {activeTab + 1}/{NAV_CONFIG.length}
               </span>
-              <span className="text-sm font-bold text-white tracking-tight truncate max-w-[130px] sm:max-w-none">
-                {NAV_CONFIG[activeTab]?.label || NAV_ITEMS[activeTab]}
-              </span>
+              <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 min-w-0">
+                <span className="text-sm font-bold text-white tracking-tight truncate max-w-[140px] sm:max-w-none">
+                  {NAV_CONFIG[activeTab]?.label || NAV_ITEMS[activeTab]}
+                </span>
+                <span className="text-xs text-slate-400 hidden xl:inline truncate max-w-md">
+                  — {NAV_CONFIG[activeTab]?.description}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -285,9 +290,18 @@ export const TopBar: React.FC<TopBarProps> = ({
                         }`}
                       />
 
-                      <span className="truncate text-[11px] flex-1 leading-tight">
-                        {item.label}
-                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="truncate text-[11px] leading-tight font-medium">
+                          {item.label}
+                        </div>
+                        <div
+                          className={`truncate text-[9px] font-sans leading-tight mt-0.5 ${
+                            isActive ? "text-cyan-300/80" : "text-slate-500 group-hover:text-slate-400"
+                          }`}
+                        >
+                          {item.description}
+                        </div>
+                      </div>
 
                       {isActive && (
                         <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />

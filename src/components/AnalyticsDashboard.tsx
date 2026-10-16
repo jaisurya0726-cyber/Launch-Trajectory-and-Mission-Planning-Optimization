@@ -223,12 +223,12 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       {/* Header Banner */}
       <div className="p-5 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <div className="text-xs uppercase font-mono text-cyan-400">Research Analytics Dashboard</div>
+          <div className="text-xs uppercase font-mono text-cyan-400">Stage 09 / Page 9 — Research Analytics Dashboard</div>
           <div className="text-xl font-bold text-white mt-0.5">
             Mission Optimization Trends &amp; Cost-Payload Scaling
           </div>
           <div className="text-xs text-slate-400 mt-1">
-            Displaying {kpis.iterationsCount} of {baseHistory.length} total iterations · Persisted via LocalStorage
+            Track cost-per-kg scaling, propellant savings, and long-term optimization trends across all mission iterations.
           </div>
         </div>
 

@@ -719,6 +719,9 @@ export const MissionInputView: React.FC<MissionInputViewProps> = ({
             <h2 className="text-lg font-bold text-white tracking-tight mt-0.5">
               Launch Trajectory &amp; Mission Parameters Input Module
             </h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Input custom rocket, payload, and weather specs to run on-demand Classical, QUBO, and QAOA optimization.
+            </p>
           </div>
         </div>
 

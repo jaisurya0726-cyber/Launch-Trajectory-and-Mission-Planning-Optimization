@@ -310,14 +310,19 @@ export const SensitivityAnalysisView: React.FC<SensitivityAnalysisViewProps> = (
               <TrendingUp className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-base font-bold text-white flex items-center gap-2.5">
-                <span>Trajectory Parameter Sensitivity &amp; Dispersion Analysis</span>
-                <span className="text-xs font-mono px-2 py-0.5 rounded border border-cyan-800/60 bg-cyan-950/70 text-cyan-300">
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-xs uppercase font-mono text-cyan-400 font-semibold tracking-wider">
+                  Stage 10 / Page 10 — Trajectory Sensitivity &amp; Dispersion Analysis
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded border border-cyan-800/60 bg-cyan-950/70 text-cyan-300">
                   D3.js Scatter Engine
                 </span>
               </div>
+              <h2 className="text-base font-bold text-white tracking-tight">
+                Booster Thrust, Propellant Reserves &amp; Max-Q Sensitivity
+              </h2>
               <div className="text-xs text-slate-400 mt-0.5 font-sans">
-                Quantify how physical fluctuations in booster thrust, fuel reserve margins, and propellant loading impact final orbit insertion velocity and apogee
+                Inspect flight dispersion via D3.js parameter sweeps and Monte Carlo scatter plots to identify velocity deficits and Max-Q bottlenecks.
               </div>
             </div>
           </div>

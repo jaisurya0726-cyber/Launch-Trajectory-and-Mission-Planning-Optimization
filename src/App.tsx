@@ -177,6 +177,7 @@ function MainApp() {
             }}
             onProceed={() => setActiveTab(1)}
             onOpenCustomInput={() => setActiveTab(11)}
+            onNavigateToStage={(stageId) => setActiveTab(stageId)}
           />
         )}
 
