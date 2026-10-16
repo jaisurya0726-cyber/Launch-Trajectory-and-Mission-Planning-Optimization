@@ -48,34 +48,6 @@ export const MissionSelector: React.FC<MissionSelectorProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Stage 1 Header Banner with Simple Brief Description */}
-      <div className="p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900/90 to-cyan-950/40 border border-slate-800 flex flex-wrap items-center justify-between gap-4 shadow-xl">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="text-xs uppercase font-mono text-cyan-400 font-semibold tracking-wider">
-              Stage 01 — Mission Selection &amp; Flight Catalog
-            </span>
-            <span className="px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-800/80 text-[10px] font-mono text-cyan-300 font-bold uppercase">
-              Active Stage
-            </span>
-          </div>
-          <div className="text-xl font-bold text-white tracking-tight">
-            ISRO &amp; Global Space Launch Mission Catalog
-          </div>
-          <p className="text-xs text-slate-300 max-w-3xl leading-relaxed">
-            Choose payload mass, launch vehicle, and target orbit from reference or synthetic datasets to initialize propulsion, staging, and multi-objective optimization.
-          </p>
-        </div>
-
-        <button
-          onClick={onProceed}
-          className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-950 bg-cyan-400 hover:bg-cyan-300 rounded-lg transition-colors cursor-pointer shadow-md shadow-cyan-500/20"
-        >
-          <span>Proceed to Stage 02 (Parameters)</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </button>
-      </div>
-
       {/* ALL 14 PIPELINE STAGES OVERVIEW: Simple & Brief Descriptions for Every Stage */}
       <StagesPipelineOverview
         activeTab={0}

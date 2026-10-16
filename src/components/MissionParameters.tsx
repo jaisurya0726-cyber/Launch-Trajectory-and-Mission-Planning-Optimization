@@ -3,6 +3,7 @@ import { Mission } from "../types";
 import { G0 } from "../lib/physics";
 import { Gauge, CloudRain, Wind, Thermometer, ShieldAlert, ArrowRight, Sliders, RefreshCw, Zap } from "lucide-react";
 import { LaunchRiskAssessment } from "./LaunchRiskAssessment";
+import { ScientificMetricTooltip } from "./ScientificMetricTooltip";
 
 interface MissionParametersProps {
   mission: Mission;
@@ -191,7 +192,10 @@ export const MissionParameters: React.FC<MissionParametersProps> = ({
         {/* Dynamic Sensitivity Impact Readouts (Instant HUD) */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-xs font-mono tabular-nums">
           <div className="p-3 bg-slate-950/80 rounded-lg border border-slate-800/80">
-            <span className="text-slate-400 font-sans block text-[11px]">Payload Mass Shift</span>
+            <div className="flex items-center justify-between text-slate-400 font-sans text-[11px]">
+              <span>Payload Mass Shift</span>
+              <ScientificMetricTooltip metricKey="payload_mass" />
+            </div>
             <div className="text-base font-bold text-white mt-0.5">
               {sensitivity.adjustedPayload.toLocaleString()} kg
             </div>
@@ -201,7 +205,10 @@ export const MissionParameters: React.FC<MissionParametersProps> = ({
           </div>
 
           <div className="p-3 bg-slate-950/80 rounded-lg border border-slate-800/80">
-            <span className="text-slate-400 font-sans block text-[11px]">Fuel Consumption Impact</span>
+            <div className="flex items-center justify-between text-slate-400 font-sans text-[11px]">
+              <span>Fuel Consumption Impact</span>
+              <ScientificMetricTooltip metricKey="fuel_consumption" />
+            </div>
             <div className="text-base font-bold text-white mt-0.5">
               {sensitivity.adjustedFuel.toLocaleString()} kg
             </div>
@@ -211,7 +218,10 @@ export const MissionParameters: React.FC<MissionParametersProps> = ({
           </div>
 
           <div className="p-3 bg-slate-950/80 rounded-lg border border-slate-800/80">
-            <span className="text-slate-400 font-sans block text-[11px]">Vehicle Max Δv Margin</span>
+            <div className="flex items-center justify-between text-slate-400 font-sans text-[11px]">
+              <span>Vehicle Max Δv Margin</span>
+              <ScientificMetricTooltip metricKey="delta_v" />
+            </div>
             <div className="text-base font-bold text-white mt-0.5">
               {sensitivity.adjustedMaxDv} km/s
             </div>
@@ -221,7 +231,10 @@ export const MissionParameters: React.FC<MissionParametersProps> = ({
           </div>
 
           <div className="p-3 bg-slate-950/80 rounded-lg border border-slate-800/80">
-            <span className="text-slate-400 font-sans block text-[11px]">Liftoff TWR Shift</span>
+            <div className="flex items-center justify-between text-slate-400 font-sans text-[11px]">
+              <span>Liftoff TWR Shift</span>
+              <ScientificMetricTooltip metricKey="thrust_to_weight_ratio" />
+            </div>
             <div className="text-base font-bold text-white mt-0.5">
               {sensitivity.adjustedTwr.toFixed(2)}
             </div>
@@ -235,7 +248,10 @@ export const MissionParameters: React.FC<MissionParametersProps> = ({
       {/* Primary Dynamic Metrics Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800">
-          <div className="text-xs font-mono uppercase text-slate-400">Payload Capacity Usage</div>
+          <div className="text-xs font-mono uppercase text-slate-400 flex items-center justify-between">
+            <span>Payload Capacity Usage</span>
+            <ScientificMetricTooltip metricKey="payload_mass" />
+          </div>
           <div className="text-2xl font-mono font-bold text-white mt-1 tabular-nums">
             {sensitivity.adjustedPayloadRatio.toFixed(1)} %
           </div>
@@ -251,7 +267,10 @@ export const MissionParameters: React.FC<MissionParametersProps> = ({
         </div>
 
         <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800">
-          <div className="text-xs font-mono uppercase text-slate-400">Propellant Burn Ratio</div>
+          <div className="text-xs font-mono uppercase text-slate-400 flex items-center justify-between">
+            <span>Propellant Burn Ratio</span>
+            <ScientificMetricTooltip metricKey="fuel_margin" />
+          </div>
           <div className="text-2xl font-mono font-bold text-white mt-1 tabular-nums">
             {sensitivity.adjustedFuelRatio.toFixed(1)} %
           </div>
@@ -267,7 +286,10 @@ export const MissionParameters: React.FC<MissionParametersProps> = ({
         </div>
 
         <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800">
-          <div className="text-xs font-mono uppercase text-slate-400">Thrust-to-Weight (Liftoff)</div>
+          <div className="text-xs font-mono uppercase text-slate-400 flex items-center justify-between">
+            <span>Thrust-to-Weight (Liftoff)</span>
+            <ScientificMetricTooltip metricKey="thrust_to_weight_ratio" />
+          </div>
           <div className="text-2xl font-mono font-bold text-white mt-1 tabular-nums">
             {sensitivity.adjustedTwr.toFixed(2)}
           </div>
@@ -316,20 +338,29 @@ export const MissionParameters: React.FC<MissionParametersProps> = ({
           </div>
 
           <div className="space-y-2.5 text-xs font-mono">
-            <div className="flex justify-between py-1.5 border-b border-slate-800">
+            <div className="flex justify-between items-center py-1.5 border-b border-slate-800">
               <span className="text-slate-400 font-sans">Launch Vehicle</span>
               <span className="text-slate-200">{mission.rocket}</span>
             </div>
-            <div className="flex justify-between py-1.5 border-b border-slate-800">
-              <span className="text-slate-400 font-sans">Vehicle Dry Mass</span>
+            <div className="flex justify-between items-center py-1.5 border-b border-slate-800">
+              <span className="text-slate-400 font-sans flex items-center gap-1.5">
+                <span>Vehicle Dry Mass</span>
+                <ScientificMetricTooltip metricKey="rocket_mass" />
+              </span>
               <span className="text-slate-200">{mission.rocket_mass.toLocaleString()} kg</span>
             </div>
-            <div className="flex justify-between py-1.5 border-b border-slate-800">
-              <span className="text-slate-400 font-sans">Total Propellant Loaded</span>
+            <div className="flex justify-between items-center py-1.5 border-b border-slate-800">
+              <span className="text-slate-400 font-sans flex items-center gap-1.5">
+                <span>Total Propellant Loaded</span>
+                <ScientificMetricTooltip metricKey="fuel_mass" />
+              </span>
               <span className="text-slate-200">{mission.fuel_mass.toLocaleString()} kg</span>
             </div>
-            <div className="flex justify-between py-1.5 border-b border-slate-800">
-              <span className="text-slate-400 font-sans">Payload Mass (Active)</span>
+            <div className="flex justify-between items-center py-1.5 border-b border-slate-800">
+              <span className="text-slate-400 font-sans flex items-center gap-1.5">
+                <span>Payload Mass (Active)</span>
+                <ScientificMetricTooltip metricKey="payload_mass" />
+              </span>
               <span className="text-cyan-300 font-bold">
                 {sensitivity.adjustedPayload.toLocaleString()} kg{" "}
                 {payloadOffsetPct !== 0 && (
@@ -339,24 +370,36 @@ export const MissionParameters: React.FC<MissionParametersProps> = ({
                 )}
               </span>
             </div>
-            <div className="flex justify-between py-1.5 border-b border-slate-800">
-              <span className="text-slate-400 font-sans">Fuel Consumption (Calculated)</span>
+            <div className="flex justify-between items-center py-1.5 border-b border-slate-800">
+              <span className="text-slate-400 font-sans flex items-center gap-1.5">
+                <span>Fuel Consumption (Calculated)</span>
+                <ScientificMetricTooltip metricKey="fuel_consumption" />
+              </span>
               <span className="text-cyan-300 font-semibold">
                 {sensitivity.adjustedFuel.toLocaleString()} kg
               </span>
             </div>
-            <div className="flex justify-between py-1.5 border-b border-slate-800">
-              <span className="text-slate-400 font-sans">Specific Impulse (Isp)</span>
-              <span className="text-slate-200">{mission.specific_impulse} s</span>
+            <div className="flex justify-between items-center py-1.5 border-b border-slate-800">
+              <span className="text-slate-400 font-sans flex items-center gap-1.5">
+                <span className="text-white font-medium">Specific Impulse (Isp)</span>
+                <ScientificMetricTooltip metricKey="specific_impulse" />
+              </span>
+              <span className="text-emerald-400 font-bold">{mission.specific_impulse} s</span>
             </div>
-            <div className="flex justify-between py-1.5 border-b border-slate-800">
-              <span className="text-slate-400 font-sans">Total Liftoff Mass (m₀)</span>
+            <div className="flex justify-between items-center py-1.5 border-b border-slate-800">
+              <span className="text-slate-400 font-sans flex items-center gap-1.5">
+                <span>Total Liftoff Mass (m₀)</span>
+                <ScientificMetricTooltip metricKey="fuel_mass" />
+              </span>
               <span className="text-slate-200">
                 {sensitivity.adjustedLiftoffMass.toLocaleString()} kg
               </span>
             </div>
-            <div className="flex justify-between py-1.5">
-              <span className="text-slate-400 font-sans">Payload Fraction</span>
+            <div className="flex justify-between items-center py-1.5">
+              <span className="text-slate-400 font-sans flex items-center gap-1.5">
+                <span>Payload Fraction</span>
+                <ScientificMetricTooltip metricKey="payload_mass" />
+              </span>
               <span className="text-slate-200">
                 {((sensitivity.adjustedPayload / sensitivity.adjustedLiftoffMass) * 100).toFixed(2)} %
               </span>
@@ -402,8 +445,11 @@ export const MissionParameters: React.FC<MissionParametersProps> = ({
               <span className="text-slate-400 font-sans">Precipitation &amp; Humidity</span>
               <span className="text-slate-200">{mission.rain} mm/hr · {mission.humidity}% RH</span>
             </div>
-            <div className="flex justify-between py-1.5 border-b border-slate-800">
-              <span className="text-slate-400 font-sans">Aerodynamic Cross Section</span>
+            <div className="flex justify-between items-center py-1.5 border-b border-slate-800">
+              <span className="text-slate-400 font-sans flex items-center gap-1.5">
+                <span>Aerodynamic Cross Section</span>
+                <ScientificMetricTooltip metricKey="cross_section_area" />
+              </span>
               <span className="text-slate-200">{mission.cross_section_area} m² (Cd = {mission.drag_coefficient})</span>
             </div>
             <div className="flex justify-between py-1.5">

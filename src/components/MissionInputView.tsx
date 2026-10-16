@@ -13,6 +13,7 @@ import {
   runQAOASimulation,
 } from "../lib/optimization";
 import { G0 } from "../lib/physics";
+import { ScientificMetricTooltip } from "./ScientificMetricTooltip";
 import {
   Rocket,
   Sliders,
@@ -840,7 +841,10 @@ export const MissionInputView: React.FC<MissionInputViewProps> = ({
           {/* Real-time Telemetry Health & Validation Summary */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-xs">
             <div className="p-3 rounded-lg bg-slate-900/60 border border-slate-800">
-              <div className="text-slate-500 uppercase">Liftoff TWR</div>
+              <div className="text-slate-500 uppercase flex items-center justify-between">
+                <span>Liftoff TWR</span>
+                <ScientificMetricTooltip metricKey="thrust_to_weight_ratio" />
+              </div>
               <div className={`text-lg font-bold tabular-nums mt-0.5 ${
                 validation.liftoffTWR < 1.0 ? "text-rose-400" : validation.liftoffTWR < 1.15 ? "text-amber-400" : "text-emerald-400"
               }`}>
@@ -852,7 +856,10 @@ export const MissionInputView: React.FC<MissionInputViewProps> = ({
             </div>
 
             <div className="p-3 rounded-lg bg-slate-900/60 border border-slate-800">
-              <div className="text-slate-500 uppercase">Total Wet Mass</div>
+              <div className="text-slate-500 uppercase flex items-center justify-between">
+                <span>Total Wet Mass</span>
+                <ScientificMetricTooltip metricKey="fuel_mass" />
+              </div>
               <div className="text-lg font-bold text-white tabular-nums mt-0.5">
                 {(validation.totalMassKg / 1000).toFixed(1)} <span className="text-xs font-normal text-slate-400">t</span>
               </div>
@@ -862,7 +869,10 @@ export const MissionInputView: React.FC<MissionInputViewProps> = ({
             </div>
 
             <div className="p-3 rounded-lg bg-slate-900/60 border border-slate-800">
-              <div className="text-slate-500 uppercase">Burn Time Est.</div>
+              <div className="text-slate-500 uppercase flex items-center justify-between">
+                <span>Burn Time Est.</span>
+                <ScientificMetricTooltip metricKey="flight_time" />
+              </div>
               <div className="text-lg font-bold text-cyan-400 tabular-nums mt-0.5">
                 {validation.burnTimeSec} <span className="text-xs font-normal text-slate-400">s</span>
               </div>
@@ -1046,8 +1056,11 @@ export const MissionInputView: React.FC<MissionInputViewProps> = ({
                   </div>
 
                   <div>
-                    <div className="flex justify-between text-slate-400 font-mono mb-1">
-                      <span>Altitude (km)</span>
+                    <div className="flex items-center justify-between text-slate-400 font-mono mb-1">
+                      <span className="flex items-center gap-1.5">
+                        <span>Altitude (km)</span>
+                        <ScientificMetricTooltip metricKey="altitude" />
+                      </span>
                       <span className="text-cyan-400 font-bold">{formData.altitude.toLocaleString()} km</span>
                     </div>
                     <input
@@ -1064,8 +1077,11 @@ export const MissionInputView: React.FC<MissionInputViewProps> = ({
                   </div>
 
                   <div>
-                    <div className="flex justify-between text-slate-400 font-mono mb-1">
-                      <span>Inclination (deg)</span>
+                    <div className="flex items-center justify-between text-slate-400 font-mono mb-1">
+                      <span className="flex items-center gap-1.5">
+                        <span>Inclination (deg)</span>
+                        <ScientificMetricTooltip metricKey="inclination" />
+                      </span>
                       <span className="text-cyan-400 font-bold">{formData.inclination}°</span>
                     </div>
                     <input
@@ -1138,7 +1154,12 @@ export const MissionInputView: React.FC<MissionInputViewProps> = ({
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   <div>
-                    <label className="block text-slate-400 font-mono mb-1">Rocket Mass (Dry, kg) *</label>
+                    <label className="flex items-center justify-between text-slate-400 font-mono mb-1">
+                      <span className="flex items-center gap-1.5">
+                        <span>Rocket Mass (Dry, kg) *</span>
+                        <ScientificMetricTooltip metricKey="rocket_mass" />
+                      </span>
+                    </label>
                     <input
                       type="number"
                       min="100"
@@ -1152,7 +1173,12 @@ export const MissionInputView: React.FC<MissionInputViewProps> = ({
                   </div>
 
                   <div>
-                    <label className="block text-slate-400 font-mono mb-1">Fuel Mass (Propellant, kg) *</label>
+                    <label className="flex items-center justify-between text-slate-400 font-mono mb-1">
+                      <span className="flex items-center gap-1.5">
+                        <span>Fuel Mass (Propellant, kg) *</span>
+                        <ScientificMetricTooltip metricKey="fuel_mass" />
+                      </span>
+                    </label>
                     <input
                       type="number"
                       min="100"
@@ -1166,7 +1192,12 @@ export const MissionInputView: React.FC<MissionInputViewProps> = ({
                   </div>
 
                   <div>
-                    <label className="block text-slate-400 font-mono mb-1">Thrust (kN at liftoff) *</label>
+                    <label className="flex items-center justify-between text-slate-400 font-mono mb-1">
+                      <span className="flex items-center gap-1.5">
+                        <span>Thrust (kN at liftoff) *</span>
+                        <ScientificMetricTooltip metricKey="thrust" />
+                      </span>
+                    </label>
                     <input
                       type="number"
                       min="1"
@@ -1183,7 +1214,12 @@ export const MissionInputView: React.FC<MissionInputViewProps> = ({
                   </div>
 
                   <div>
-                    <label className="block text-slate-400 font-mono mb-1">Specific Impulse (Isp, s) *</label>
+                    <label className="flex items-center justify-between text-slate-400 font-mono mb-1">
+                      <span className="flex items-center gap-1.5">
+                        <span className="text-white font-semibold">Specific Impulse (Isp, s) *</span>
+                        <ScientificMetricTooltip metricKey="specific_impulse" />
+                      </span>
+                    </label>
                     <input
                       type="number"
                       min="100"
@@ -1202,8 +1238,16 @@ export const MissionInputView: React.FC<MissionInputViewProps> = ({
 
                   {/* Rocket Diagnostics Bar */}
                   <div className="sm:col-span-2 p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 flex items-center justify-between text-[11px] font-mono text-slate-400">
-                    <span>Exhaust Velocity ($v_e$): <strong className="text-white">{(formData.specific_impulse * G0).toFixed(0)} m/s</strong></span>
-                    <span>Liftoff Thrust: <strong className="text-cyan-400">{(formData.thrust).toLocaleString()} kN</strong></span>
+                    <span className="flex items-center gap-1.5">
+                      <span>Exhaust Velocity ($v_e$):</span>
+                      <strong className="text-white">{(formData.specific_impulse * G0).toFixed(0)} m/s</strong>
+                      <ScientificMetricTooltip metricKey="exhaust_velocity" />
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span>Liftoff Thrust:</span>
+                      <strong className="text-cyan-400">{(formData.thrust).toLocaleString()} kN</strong>
+                      <ScientificMetricTooltip metricKey="thrust" />
+                    </span>
                   </div>
                 </div>
               )}
@@ -1263,7 +1307,12 @@ export const MissionInputView: React.FC<MissionInputViewProps> = ({
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                     <div>
-                      <label className="block text-slate-400 font-mono mb-1">Payload Mass (kg) *</label>
+                      <label className="flex items-center justify-between text-slate-400 font-mono mb-1">
+                        <span className="flex items-center gap-1.5">
+                          <span>Payload Mass (kg) *</span>
+                          <ScientificMetricTooltip metricKey="payload_mass" />
+                        </span>
+                      </label>
                       <input
                         type="number"
                         min="0"
@@ -1277,7 +1326,12 @@ export const MissionInputView: React.FC<MissionInputViewProps> = ({
                     </div>
 
                     <div>
-                      <label className="block text-slate-400 font-mono mb-1">Payload Volume (m³)</label>
+                      <label className="flex items-center justify-between text-slate-400 font-mono mb-1">
+                        <span className="flex items-center gap-1.5">
+                          <span>Payload Volume (m³)</span>
+                          <ScientificMetricTooltip metricKey="payload_volume" />
+                        </span>
+                      </label>
                       <input
                         type="number"
                         min="0"
@@ -1363,7 +1417,12 @@ export const MissionInputView: React.FC<MissionInputViewProps> = ({
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                     <div>
-                      <label className="block text-slate-400 font-mono mb-1">Delta-V (km/s) *</label>
+                      <label className="flex items-center justify-between text-slate-400 font-mono mb-1">
+                        <span className="flex items-center gap-1.5">
+                          <span className="text-white font-semibold">Delta-V (Δv, km/s) *</span>
+                          <ScientificMetricTooltip metricKey="delta_v" />
+                        </span>
+                      </label>
                       <input
                         type="number"
                         step="0.05"
@@ -1378,7 +1437,12 @@ export const MissionInputView: React.FC<MissionInputViewProps> = ({
                     </div>
 
                     <div>
-                      <label className="block text-slate-400 font-mono mb-1">Flight Time (minutes) *</label>
+                      <label className="flex items-center justify-between text-slate-400 font-mono mb-1">
+                        <span className="flex items-center gap-1.5">
+                          <span>Flight Time (minutes) *</span>
+                          <ScientificMetricTooltip metricKey="flight_time" />
+                        </span>
+                      </label>
                       <input
                         type="number"
                         step="0.1"
@@ -1393,7 +1457,12 @@ export const MissionInputView: React.FC<MissionInputViewProps> = ({
                     </div>
 
                     <div>
-                      <label className="block text-slate-400 font-mono mb-1">Fuel Consumption (kg) *</label>
+                      <label className="flex items-center justify-between text-slate-400 font-mono mb-1">
+                        <span className="flex items-center gap-1.5">
+                          <span>Fuel Consumption (kg) *</span>
+                          <ScientificMetricTooltip metricKey="fuel_consumption" />
+                        </span>
+                      </label>
                       <input
                         type="number"
                         min="100"
@@ -1408,9 +1477,13 @@ export const MissionInputView: React.FC<MissionInputViewProps> = ({
                   </div>
 
                   <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 text-[11px] font-mono text-slate-400 flex items-center justify-between">
-                    <span>Fuel Margin: <strong className={formData.fuel_mass >= formData.fuel_consumption ? "text-emerald-400" : "text-rose-400"}>
-                      {(((formData.fuel_mass - formData.fuel_consumption) / Math.max(1, formData.fuel_mass)) * 100).toFixed(1)}%
-                    </strong></span>
+                    <span className="flex items-center gap-1.5">
+                      <span>Fuel Margin:</span>
+                      <strong className={formData.fuel_mass >= formData.fuel_consumption ? "text-emerald-400" : "text-rose-400"}>
+                        {(((formData.fuel_mass - formData.fuel_consumption) / Math.max(1, formData.fuel_mass)) * 100).toFixed(1)}%
+                      </strong>
+                      <ScientificMetricTooltip metricKey="fuel_margin" />
+                    </span>
                     <span>Internal Units: <strong className="text-white">{(formData.flight_time * 60).toFixed(0)} seconds</strong></span>
                   </div>
                 </>
