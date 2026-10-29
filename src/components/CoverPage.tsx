@@ -7,7 +7,6 @@ import {
   Layers,
   Flame,
   ShieldCheck,
-  Compass,
   Cpu,
   Sparkles,
   Sun,
@@ -21,9 +20,10 @@ import { useTheme } from "../context/ThemeContext";
 
 interface CoverPageProps {
   onGetStarted: (initialTab?: number) => void;
+  onOpenGeminiChat?: () => void;
 }
 
-export const CoverPage: React.FC<CoverPageProps> = ({ onGetStarted }) => {
+export const CoverPage: React.FC<CoverPageProps> = ({ onGetStarted, onOpenGeminiChat }) => {
   const { isDark, toggleTheme } = useTheme();
   const [isExiting, setIsExiting] = useState(false);
 
@@ -81,6 +81,17 @@ export const CoverPage: React.FC<CoverPageProps> = ({ onGetStarted }) => {
         </div>
 
         <div className="flex items-center gap-3">
+          {onOpenGeminiChat && (
+            <button
+              onClick={onOpenGeminiChat}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-gradient-to-r from-cyan-950/90 to-indigo-950/90 hover:from-cyan-900 hover:to-indigo-900 border border-cyan-500/50 text-cyan-200 hover:text-white transition-all cursor-pointer shadow-xs"
+              title="Open Gemini Chatbot"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Chat with Gemini</span>
+            </button>
+          )}
+
           {/* Theme Toggle Button */}
           <button
             onClick={toggleTheme}
@@ -89,15 +100,6 @@ export const CoverPage: React.FC<CoverPageProps> = ({ onGetStarted }) => {
             aria-label="Toggle theme"
           >
             {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-300" />}
-          </button>
-
-          {/* Quick Enter App Button */}
-          <button
-            onClick={() => handleLaunch(0)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-bold bg-cyan-500 hover:bg-cyan-400 text-slate-950 transition-all cursor-pointer shadow-sm shadow-cyan-500/20 active:scale-95"
-          >
-            <span>Enter App</span>
-            <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </header>
@@ -147,7 +149,7 @@ export const CoverPage: React.FC<CoverPageProps> = ({ onGetStarted }) => {
               </div>
             </div>
 
-            {/* Primary Action Buttons */}
+            {/* Primary Action Button */}
             <div className="pt-4 flex flex-wrap items-center gap-4">
               <button
                 onClick={() => handleLaunch(0)}
@@ -155,14 +157,6 @@ export const CoverPage: React.FC<CoverPageProps> = ({ onGetStarted }) => {
               >
                 <span>Get Started</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </button>
-
-              <button
-                onClick={() => handleLaunch(2)}
-                className="inline-flex items-center gap-2 px-5 py-4 rounded-xl font-mono text-xs font-semibold text-slate-300 hover:text-white bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 transition-all cursor-pointer active:scale-95"
-              >
-                <Compass className="w-4 h-4 text-cyan-400" />
-                <span>Launch 3D Visualizer</span>
               </button>
             </div>
 

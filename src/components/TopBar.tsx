@@ -45,6 +45,8 @@ interface TopBarProps {
   isSidebarOpen?: boolean;
   onToggleSidebar?: () => void;
   onReturnToCover?: () => void;
+  isGeminiChatOpen?: boolean;
+  onToggleGeminiChat?: () => void;
 }
 
 export const NAV_ITEMS = [
@@ -95,6 +97,8 @@ export const TopBar: React.FC<TopBarProps> = ({
   isSidebarOpen,
   onToggleSidebar,
   onReturnToCover,
+  isGeminiChatOpen,
+  onToggleGeminiChat,
 }) => {
   const { isDark, toggleTheme } = useTheme();
   const [internalSidebarOpen, setInternalSidebarOpen] = useState(true);
@@ -370,6 +374,24 @@ export const TopBar: React.FC<TopBarProps> = ({
 
           {/* Zone 3: Actions */}
           <div className="flex items-center gap-2">
+            {/* Chat with Gemini - Primary AI Copilot Trigger */}
+            {onToggleGeminiChat && (
+              <button
+                onClick={onToggleGeminiChat}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap cursor-pointer shadow-xs group ${
+                  isGeminiChatOpen
+                    ? "bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-400 text-slate-950 font-bold shadow-cyan-500/25 ring-2 ring-cyan-400"
+                    : "bg-gradient-to-r from-cyan-950/80 via-slate-900 to-indigo-950/80 hover:from-cyan-900/90 hover:to-indigo-900/90 border border-cyan-500/50 text-cyan-200 hover:text-white"
+                }`}
+                title="Chat with Gemini (Right Sidebar AI Copilot)"
+                aria-label="Chat with Gemini"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-cyan-400 group-hover:rotate-12 transition-transform shrink-0" />
+                <span className="font-bold">Chat with Gemini</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse hidden sm:inline-block" />
+              </button>
+            )}
+
             {onReturnToCover && (
               <button
                 onClick={onReturnToCover}

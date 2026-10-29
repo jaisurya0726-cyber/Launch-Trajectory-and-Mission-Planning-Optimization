@@ -25,6 +25,7 @@ import { AtmosphericReentryView } from "./components/AtmosphericReentryView";
 import { MissionHistoryModal } from "./components/MissionHistoryModal";
 import { MissionLogbookSidebar } from "./components/MissionLogbookSidebar";
 import { CoverPage } from "./components/CoverPage";
+import { GeminiChatbotSidebar } from "./components/GeminiChatbotSidebar";
 import { runClassicalOptimization, runQAOASimulation } from "./lib/optimization";
 import {
   getMissionHistory,
@@ -83,6 +84,7 @@ function MainApp() {
 
   const [activeTab, setActiveTab] = useState<number>(0);
   const [showCoverPage, setShowCoverPage] = useState<boolean>(true);
+  const [isGeminiChatOpen, setIsGeminiChatOpen] = useState<boolean>(false);
   const [selectedMission, setSelectedMission] = useState<Mission>(missions[0] || ({} as Mission));
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -144,14 +146,23 @@ function MainApp() {
 
   if (showCoverPage) {
     return (
-      <CoverPage
-        onGetStarted={(targetTab) => {
-          if (typeof targetTab === "number") {
-            setActiveTab(targetTab);
-          }
-          setShowCoverPage(false);
-        }}
-      />
+      <>
+        <CoverPage
+          onGetStarted={(targetTab) => {
+            if (typeof targetTab === "number") {
+              setActiveTab(targetTab);
+            }
+            setShowCoverPage(false);
+          }}
+          onOpenGeminiChat={() => setIsGeminiChatOpen(true)}
+        />
+        <GeminiChatbotSidebar
+          isOpen={isGeminiChatOpen}
+          onClose={() => setIsGeminiChatOpen(false)}
+          activeMission={selectedMission}
+          activeTab={activeTab}
+        />
+      </>
     );
   }
 
@@ -176,6 +187,8 @@ function MainApp() {
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
         onReturnToCover={() => setShowCoverPage(true)}
+        isGeminiChatOpen={isGeminiChatOpen}
+        onToggleGeminiChat={() => setIsGeminiChatOpen((prev) => !prev)}
       />
 
       {/* Main Workspace Area */}
@@ -366,6 +379,14 @@ function MainApp() {
         history={history}
         onSaveNote={handleSaveLogbookNote}
         onSelectMission={handleSelectHistoryEntry}
+      />
+
+      {/* Gemini AI Copilot Chatbot Right Sidebar */}
+      <GeminiChatbotSidebar
+        isOpen={isGeminiChatOpen}
+        onClose={() => setIsGeminiChatOpen(false)}
+        activeMission={selectedMission}
+        activeTab={activeTab}
       />
 
       {/* Quiet Academic Footer */}
