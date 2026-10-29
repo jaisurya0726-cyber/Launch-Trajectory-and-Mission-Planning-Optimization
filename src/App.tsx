@@ -24,6 +24,7 @@ import { QuantumErrorCorrectionView } from "./components/QuantumErrorCorrectionV
 import { AtmosphericReentryView } from "./components/AtmosphericReentryView";
 import { MissionHistoryModal } from "./components/MissionHistoryModal";
 import { MissionLogbookSidebar } from "./components/MissionLogbookSidebar";
+import { CoverPage } from "./components/CoverPage";
 import { runClassicalOptimization, runQAOASimulation } from "./lib/optimization";
 import {
   getMissionHistory,
@@ -81,6 +82,7 @@ function MainApp() {
   }, []);
 
   const [activeTab, setActiveTab] = useState<number>(0);
+  const [showCoverPage, setShowCoverPage] = useState<boolean>(true);
   const [selectedMission, setSelectedMission] = useState<Mission>(missions[0] || ({} as Mission));
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -140,6 +142,19 @@ function MainApp() {
     setHistory([]);
   };
 
+  if (showCoverPage) {
+    return (
+      <CoverPage
+        onGetStarted={(targetTab) => {
+          if (typeof targetTab === "number") {
+            setActiveTab(targetTab);
+          }
+          setShowCoverPage(false);
+        }}
+      />
+    );
+  }
+
   return (
     <div
       className={`min-h-screen ${
@@ -160,6 +175,7 @@ function MainApp() {
         notesCount={notesCount}
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
+        onReturnToCover={() => setShowCoverPage(true)}
       />
 
       {/* Main Workspace Area */}
@@ -354,7 +370,17 @@ function MainApp() {
 
       {/* Quiet Academic Footer */}
       <footer className="border-t border-slate-800/80 bg-slate-950/60 py-4 px-6 text-xs text-slate-500 font-mono flex flex-wrap items-center justify-between gap-4">
-        <div>Launch Trajectory &amp; Mission-Planning Optimization using Quantum Computing</div>
+        <div className="flex items-center gap-3">
+          <span>Launch Trajectory &amp; Mission-Planning Optimization using Quantum Computing</span>
+          <span>·</span>
+          <button
+            onClick={() => setShowCoverPage(true)}
+            className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2 cursor-pointer transition-colors"
+            title="Return to Welcome Cover Page"
+          >
+            Welcome Cover
+          </button>
+        </div>
         <div className="flex items-center gap-4">
           <span>Python 3.10 + Qiskit-compatible Ising Formulation</span>
           <span>·</span>

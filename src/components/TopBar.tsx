@@ -27,6 +27,7 @@ import {
   Sparkles,
   PanelLeftClose,
   PanelLeftOpen,
+  Home,
 } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 
@@ -43,6 +44,7 @@ interface TopBarProps {
   notesCount?: number;
   isSidebarOpen?: boolean;
   onToggleSidebar?: () => void;
+  onReturnToCover?: () => void;
 }
 
 export const NAV_ITEMS = [
@@ -92,6 +94,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   notesCount,
   isSidebarOpen,
   onToggleSidebar,
+  onReturnToCover,
 }) => {
   const { isDark, toggleTheme } = useTheme();
   const [internalSidebarOpen, setInternalSidebarOpen] = useState(true);
@@ -201,19 +204,39 @@ export const TopBar: React.FC<TopBarProps> = ({
             {/* Top Brand & Progress */}
             <div className="space-y-3 shrink-0 pb-2 border-b border-slate-800">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 bg-cyan-950/80 border border-cyan-800/60 rounded-lg text-cyan-400">
-                    <Rocket className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-white tracking-tight leading-tight">
-                      AeroQuantum
+                {onReturnToCover ? (
+                  <button
+                    onClick={onReturnToCover}
+                    className="flex items-center gap-2 text-left cursor-pointer group p-1 -m-1 rounded-lg hover:bg-slate-900 transition-colors"
+                    title="Return to Welcome Cover Page"
+                  >
+                    <div className="p-1.5 bg-cyan-950/80 border border-cyan-800/60 rounded-lg text-cyan-400 group-hover:border-cyan-500 transition-colors">
+                      <Rocket className="w-4 h-4" />
                     </div>
-                    <div className="text-[9px] text-slate-400 font-mono leading-tight">
-                      Mission Optimizer
+                    <div>
+                      <div className="text-xs font-bold text-white tracking-tight leading-tight group-hover:text-cyan-300 transition-colors">
+                        AeroQuantum
+                      </div>
+                      <div className="text-[9px] text-slate-400 font-mono leading-tight">
+                        Mission Optimizer
+                      </div>
+                    </div>
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-cyan-950/80 border border-cyan-800/60 rounded-lg text-cyan-400">
+                      <Rocket className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-white tracking-tight leading-tight">
+                        AeroQuantum
+                      </div>
+                      <div className="text-[9px] text-slate-400 font-mono leading-tight">
+                        Mission Optimizer
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* Close Button on sidebar */}
                 <button
@@ -347,6 +370,16 @@ export const TopBar: React.FC<TopBarProps> = ({
 
           {/* Zone 3: Actions */}
           <div className="flex items-center gap-2">
+            {onReturnToCover && (
+              <button
+                onClick={onReturnToCover}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-mono font-medium text-slate-400 hover:text-white bg-slate-900/80 hover:bg-slate-800 border border-slate-700/70 rounded-lg transition-colors whitespace-nowrap cursor-pointer"
+                title="Return to Welcome Cover Page"
+              >
+                <Home className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="hidden sm:inline">Cover</span>
+              </button>
+            )}
             <button
               onClick={() => setActiveTab(11)}
               className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
