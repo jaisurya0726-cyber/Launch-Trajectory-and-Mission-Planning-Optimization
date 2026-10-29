@@ -25,21 +25,14 @@ interface CoverPageProps {
 
 export const CoverPage: React.FC<CoverPageProps> = ({ onGetStarted, onOpenGeminiChat }) => {
   const { isDark, toggleTheme } = useTheme();
-  const [isExiting, setIsExiting] = useState(false);
 
   const handleLaunch = (tabIndex: number = 0) => {
-    setIsExiting(true);
-    // Smooth transition delay before switching views
-    setTimeout(() => {
-      onGetStarted(tabIndex);
-    }, 320);
+    onGetStarted(tabIndex);
   };
 
   return (
     <div
-      className={`min-h-screen w-full relative overflow-x-hidden flex flex-col justify-between selection:bg-cyan-500 selection:text-slate-950 transition-all duration-300 ${
-        isExiting ? "opacity-0 scale-[0.98] pointer-events-none" : "opacity-100 scale-100"
-      } ${
+      className={`min-h-screen w-full relative overflow-x-hidden flex flex-col justify-between selection:bg-cyan-500 selection:text-slate-950 transition-colors duration-200 ${
         isDark
           ? "bg-[#07090e] text-slate-200"
           : "bg-[#f8fafc] text-slate-800"
