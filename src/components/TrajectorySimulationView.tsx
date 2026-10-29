@@ -9,6 +9,7 @@ import { SensitivityHeatmap } from "./SensitivityHeatmap";
 import { StabilityMap } from "./StabilityMap";
 import { CompareTrajectoriesToolbar } from "./CompareTrajectoriesToolbar";
 import { LaunchRiskAssessment } from "./LaunchRiskAssessment";
+import { AnimatedTrajectoryProgress } from "./AnimatedTrajectoryProgress";
 import {
   ArrowRight,
   Activity,
@@ -289,6 +290,18 @@ export const TrajectorySimulationView: React.FC<TrajectorySimulationViewProps> =
           <div className="text-xs text-slate-400 mt-1 font-mono">Atmospheric drag peak</div>
         </div>
       </div>
+
+      {/* REAL-TIME ANIMATED TRAJECTORY PROGRESS & MISSION SUCCESS FEEDBACK */}
+      <AnimatedTrajectoryProgress
+        mission={activeMission}
+        trajectory={trajData}
+        currentIndex={currentIdx}
+        onIndexChange={(idx) => setScrubberIdx(idx)}
+        isPlaying={isPlaying}
+        onTogglePlay={() => setIsPlaying(!isPlaying)}
+        playbackSpeed={playbackSpeed}
+        onChangeSpeed={(spd) => setPlaybackSpeed(spd)}
+      />
 
       {/* TRAJECTORY & ORBIT RENDERING MODE SELECTOR */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-slate-900/80 border border-slate-800">

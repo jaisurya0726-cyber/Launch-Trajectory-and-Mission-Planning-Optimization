@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Mission } from "../types";
 import {
   Download,
@@ -23,11 +23,11 @@ import {
   Menu,
   X,
   ChevronRight,
+  ChevronLeft,
   ChevronDown,
   Sparkles,
   PanelLeftClose,
   PanelLeftOpen,
-  Home,
 } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 
@@ -103,6 +103,43 @@ export const TopBar: React.FC<TopBarProps> = ({
   const { isDark, toggleTheme } = useTheme();
   const [internalSidebarOpen, setInternalSidebarOpen] = useState(true);
   const [isStagesListExpanded, setIsStagesListExpanded] = useState(true);
+
+  // Horizontal Slide Navigation State for Action Icons/Options
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setCanScrollLeft(scrollLeft > 4);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    checkScroll();
+    el.addEventListener("scroll", checkScroll, { passive: true });
+    window.addEventListener("resize", checkScroll);
+    return () => {
+      el.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("resize", checkScroll);
+    };
+  }, [checkScroll]);
+
+  const handleSlideLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -220, behavior: "smooth" });
+    }
+  };
+
+  const handleSlideRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 220, behavior: "smooth" });
+    }
+  };
 
   const sidebarOpen = isSidebarOpen !== undefined ? isSidebarOpen : internalSidebarOpen;
   const handleToggleSidebar = onToggleSidebar || (() => setInternalSidebarOpen((prev) => !prev));
@@ -372,109 +409,139 @@ export const TopBar: React.FC<TopBarProps> = ({
             </div>
           </nav>
 
-          {/* Zone 3: Actions */}
-          <div className="flex items-center gap-2">
-            {/* Chat with Gemini - Primary AI Copilot Trigger */}
-            {onToggleGeminiChat && (
+          {/* Zone 3: Actions with Interactive Slide Bar & Controls */}
+          <div className="flex-1 flex flex-col items-end min-w-0 max-w-full">
+            <div className="flex items-center gap-1.5 max-w-full w-full justify-end">
+              {/* Slide Left Button */}
               <button
-                onClick={onToggleGeminiChat}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap cursor-pointer shadow-xs group ${
-                  isGeminiChatOpen
-                    ? "bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-400 text-slate-950 font-bold shadow-cyan-500/25 ring-2 ring-cyan-400"
-                    : "bg-gradient-to-r from-cyan-950/80 via-slate-900 to-indigo-950/80 hover:from-cyan-900/90 hover:to-indigo-900/90 border border-cyan-500/50 text-cyan-200 hover:text-white"
+                onClick={handleSlideLeft}
+                disabled={!canScrollLeft}
+                className={`p-1.5 rounded-lg border transition-all cursor-pointer shrink-0 ${
+                  canScrollLeft
+                    ? "bg-slate-900 hover:bg-slate-800 text-cyan-400 border-slate-700 hover:border-cyan-500/50 shadow-xs active:scale-95"
+                    : "bg-slate-950 text-slate-600 border-slate-800/80 opacity-40 cursor-not-allowed"
                 }`}
-                title="Chat with Gemini (Right Sidebar AI Copilot)"
-                aria-label="Chat with Gemini"
+                title="Slide icons left"
+                aria-label="Slide action icons left"
               >
-                <Sparkles className="w-3.5 h-3.5 text-cyan-400 group-hover:rotate-12 transition-transform shrink-0" />
-                <span className="font-bold">Chat with Gemini</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse hidden sm:inline-block" />
+                <ChevronLeft className="w-3.5 h-3.5" />
               </button>
-            )}
 
-            {onReturnToCover && (
-              <button
-                onClick={onReturnToCover}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-mono font-medium text-slate-400 hover:text-white bg-slate-900/80 hover:bg-slate-800 border border-slate-700/70 rounded-lg transition-colors whitespace-nowrap cursor-pointer"
-                title="Return to Welcome Cover Page"
+              {/* Scrollable / Slideable Action Icons Container */}
+              <div
+                ref={scrollContainerRef}
+                className="flex items-center gap-2 overflow-x-auto scroll-smooth py-1 px-1 max-w-full scrollbar-none"
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
               >
-                <Home className="w-3.5 h-3.5 text-cyan-400" />
-                <span className="hidden sm:inline">Cover</span>
-              </button>
-            )}
-            <button
-              onClick={() => setActiveTab(11)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
-                activeTab === 11
-                  ? "bg-cyan-500 text-slate-950 font-bold shadow-sm"
-                  : "text-cyan-300 hover:text-white bg-cyan-950/70 hover:bg-cyan-900/80 border border-cyan-800/80"
-              }`}
-              title="Open Custom Mission Input & Optimization Engine"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Mission Input</span>
-            </button>
-            {onOpenLogbook && (
-              <button
-                onClick={onOpenLogbook}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-900/80 hover:bg-slate-800 border border-slate-700/70 rounded-lg transition-colors whitespace-nowrap cursor-pointer"
-                title="Open Mission Logbook"
-              >
-                <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Logbook</span>
-                {typeof notesCount === "number" && notesCount > 0 && (
-                  <span className="px-1.5 py-0.2 bg-cyan-950 text-[10px] text-cyan-300 border border-cyan-800/60 rounded font-mono">
-                    {notesCount}
-                  </span>
+                {/* Chat with Gemini - Primary AI Copilot Trigger */}
+                {onToggleGeminiChat && (
+                  <button
+                    onClick={onToggleGeminiChat}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap cursor-pointer shadow-xs group shrink-0 ${
+                      isGeminiChatOpen
+                        ? "bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-400 text-slate-950 font-bold shadow-cyan-500/25 ring-2 ring-cyan-400"
+                        : "bg-gradient-to-r from-cyan-950/80 via-slate-900 to-indigo-950/80 hover:from-cyan-900/90 hover:to-indigo-900/90 border border-cyan-500/50 text-cyan-200 hover:text-white"
+                    }`}
+                    title="Chat with Gemini (Right Sidebar AI Copilot)"
+                    aria-label="Chat with Gemini"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-cyan-400 group-hover:rotate-12 transition-transform shrink-0" />
+                    <span className="font-bold">Chat with Gemini</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse hidden sm:inline-block" />
+                  </button>
                 )}
-              </button>
-            )}
-            <button
-              onClick={onOpenHistory}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-900/80 hover:bg-slate-800 border border-slate-700/70 rounded-lg transition-colors whitespace-nowrap cursor-pointer"
-              title="Open Mission History"
-            >
-              <History className="w-3.5 h-3.5 text-cyan-400" />
-              <span>History</span>
-              <span className="px-1.5 py-0.2 bg-slate-800 text-[10px] text-cyan-300 rounded font-mono">
-                {historyCount}
-              </span>
-            </button>
-            <button
-              onClick={onRunAll}
-              disabled={isSimulating}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-white bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 rounded-lg transition-colors shadow-sm shadow-cyan-500/25 whitespace-nowrap cursor-pointer"
-            >
-              <Play className="w-3.5 h-3.5 fill-current" />
-              <span>{isSimulating ? "Optimizing..." : "Run Optimization"}</span>
-            </button>
-            <button
-              onClick={onExportAll}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/70 rounded-lg transition-colors whitespace-nowrap cursor-pointer"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Export CSV</span>
-            </button>
 
-            {/* Theme Toggle Button */}
-            <button
-              onClick={toggleTheme}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-900/80 hover:bg-slate-800 border border-slate-700/70 rounded-lg transition-colors whitespace-nowrap cursor-pointer"
-              title={isDark ? "Switch to Light Theme" : "Switch to Dark Theme"}
-              aria-label="Toggle dark/light theme"
-            >
-              {isDark ? (
-                <>
-                  <Sun className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="hidden sm:inline">Light</span>
-                </>
-              ) : (
-                <>
-                  <Moon className="w-3.5 h-3.5 text-indigo-400" />
-                  <span className="hidden sm:inline">Dark</span>
-                </>
-              )}
-            </button>
+
+                <button
+                  onClick={() => setActiveTab(11)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer shrink-0 ${
+                    activeTab === 11
+                      ? "bg-cyan-500 text-slate-950 font-bold shadow-sm"
+                      : "text-cyan-300 hover:text-white bg-cyan-950/70 hover:bg-cyan-900/80 border border-cyan-800/80"
+                  }`}
+                  title="Open Custom Mission Input & Optimization Engine"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Mission Input</span>
+                </button>
+                {onOpenLogbook && (
+                  <button
+                    onClick={onOpenLogbook}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-900/80 hover:bg-slate-800 border border-slate-700/70 rounded-lg transition-colors whitespace-nowrap cursor-pointer shrink-0"
+                    title="Open Mission Logbook"
+                  >
+                    <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Logbook</span>
+                    {typeof notesCount === "number" && notesCount > 0 && (
+                      <span className="px-1.5 py-0.2 bg-cyan-950 text-[10px] text-cyan-300 border border-cyan-800/60 rounded font-mono">
+                        {notesCount}
+                      </span>
+                    )}
+                  </button>
+                )}
+                <button
+                  onClick={onOpenHistory}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-900/80 hover:bg-slate-800 border border-slate-700/70 rounded-lg transition-colors whitespace-nowrap cursor-pointer shrink-0"
+                  title="Open Mission History"
+                >
+                  <History className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>History</span>
+                  <span className="px-1.5 py-0.2 bg-slate-800 text-[10px] text-cyan-300 rounded font-mono">
+                    {historyCount}
+                  </span>
+                </button>
+                <button
+                  onClick={onRunAll}
+                  disabled={isSimulating}
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-white bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 rounded-lg transition-colors shadow-sm shadow-cyan-500/25 whitespace-nowrap cursor-pointer shrink-0"
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>{isSimulating ? "Optimizing..." : "Run Optimization"}</span>
+                </button>
+                <button
+                  onClick={onExportAll}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/70 rounded-lg transition-colors whitespace-nowrap cursor-pointer shrink-0"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Export CSV</span>
+                </button>
+
+                {/* Theme Toggle Button */}
+                <button
+                  onClick={toggleTheme}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-900/80 hover:bg-slate-800 border border-slate-700/70 rounded-lg transition-colors whitespace-nowrap cursor-pointer shrink-0"
+                  title={isDark ? "Switch to Light Theme" : "Switch to Dark Theme"}
+                  aria-label="Toggle dark/light theme"
+                >
+                  {isDark ? (
+                    <>
+                      <Sun className="w-3.5 h-3.5 text-amber-400" />
+                      <span className="hidden sm:inline">Light</span>
+                    </>
+                  ) : (
+                    <>
+                      <Moon className="w-3.5 h-3.5 text-indigo-400" />
+                      <span className="hidden sm:inline">Dark</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Slide Right Button */}
+              <button
+                onClick={handleSlideRight}
+                disabled={!canScrollRight}
+                className={`p-1.5 rounded-lg border transition-all cursor-pointer shrink-0 ${
+                  canScrollRight
+                    ? "bg-slate-900 hover:bg-slate-800 text-cyan-400 border-slate-700 hover:border-cyan-500/50 shadow-xs active:scale-95"
+                    : "bg-slate-950 text-slate-600 border-slate-800/80 opacity-40 cursor-not-allowed"
+                }`}
+                title="Slide icons right"
+                aria-label="Slide action icons right"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
       </header>
